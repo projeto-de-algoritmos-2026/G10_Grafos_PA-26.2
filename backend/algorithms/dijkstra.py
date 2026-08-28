@@ -23,7 +23,7 @@ def dijkstra(network: Network, origin: str, destination: str) -> RouteResult:
     destination_is_up = network.is_node_up(destination)
 
     if not origin_is_up or not destination_is_up:
-        return _not_found()
+        return RouteResult.not_found()
     if origin == destination:
         return RouteResult(path=[origin], cost=0.0, found=True)
 
@@ -39,11 +39,7 @@ def dijkstra(network: Network, origin: str, destination: str) -> RouteResult:
         if current_cost > distances[current]:
             continue
         if current == destination:
-            return RouteResult(
-                path=_reconstruct_path(predecessors, origin, destination),
-                cost=current_cost,
-                found=True,
-            )
+            return RouteResult.from_predecessors(predecessors, origin, destination, current_cost)
 
         for edge in network.neighbors(current):
             new_cost = current_cost + edge.weight
@@ -52,7 +48,7 @@ def dijkstra(network: Network, origin: str, destination: str) -> RouteResult:
                 predecessors[edge.destination] = current
                 heapq.heappush(queue, (new_cost, edge.destination))
 
-    return _not_found()
+    return RouteResult.not_found()
 
 
 def _validate_active_edge_weights(network: Network) -> None:
@@ -64,17 +60,3 @@ def _validate_active_edge_weights(network: Network) -> None:
             and edge.weight < 0
         ):
             raise ValueError("Dijkstra does not support negative edge weights")
-
-
-def _reconstruct_path(predecessors: dict[str, str], origin: str, destination: str) -> list[str]:
-    path = [destination]
-    current = destination
-    while current != origin:
-        current = predecessors[current]
-        path.append(current)
-    path.reverse()
-    return path
-
-
-def _not_found() -> RouteResult:
-    return RouteResult(path=[], cost=math.inf, found=False)
