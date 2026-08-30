@@ -1,0 +1,22 @@
+{
+  "timestamp_utc": "2026-08-30 23:47:24 UTC",
+  "cpu": "12th Gen Intel(R) Core(TM) i7-1255U",
+  "nucleos": 12,
+  "so": "Linux 7.1.9-arch1-2",
+  "python": "3.12.13",
+  "topologias": [
+    "aleatoria",
+    "caminho"
+  ],
+  "tamanhos": [
+    10,
+    50,
+    100,
+    500,
+    1000
+  ],
+  "grau_medio": 4.0,
+  "amostras": 3,
+  "repeticoes": 3,
+  "seed": 42
+}
