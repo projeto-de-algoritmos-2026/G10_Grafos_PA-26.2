@@ -1,0 +1,160 @@
+{
+  "metadata": {
+    "versao": 1,
+    "escopo": "malha_mundial",
+    "unidade_peso": "km",
+    "sistema_coordenadas": "WGS84",
+    "metodologia_peso": "Distância geodésica Haversine entre as coordenadas exibidas, arredondada ao quilômetro.",
+    "semantica_aresta": "Conectividade lógica entre áreas atendidas pelo mesmo sistema real; não representa o traçado físico exato do cabo.",
+    "consultado_em": "2026-08-30",
+    "fontes": {
+      "geonames": {
+        "nome": "GeoNames",
+        "url": "https://www.geonames.org/",
+        "uso": "Nomes geográficos e coordenadas aproximadas WGS84 das áreas exibidas.",
+        "licenca": "CC BY 4.0"
+      },
+      "telegeography-faq": {
+        "nome": "TeleGeography Submarine Cable FAQs",
+        "url": "https://www2.telegeography.com/submarine-cable-faqs-frequently-asked-questions",
+        "uso": "Metodologia, limitações e semântica do mapa público de cabos.",
+        "licenca": "Referência pública; nenhum dado geocodificado bruto foi redistribuído."
+      },
+      "firmina": {
+        "nome": "TeleGeography — Firmina",
+        "url": "https://www.submarinecablemap.com/submarine-cable/firmina",
+        "uso": "Landing points e estado em serviço do sistema Firmina."
+      },
+      "monet": {
+        "nome": "TeleGeography — Monet",
+        "url": "https://www.submarinecablemap.com/submarine-cable/monet",
+        "uso": "Landing points e estado em serviço do sistema Monet."
+      },
+      "ellalink": {
+        "nome": "TeleGeography — EllaLink",
+        "url": "https://www.submarinecablemap.com/submarine-cable/ellalink",
+        "uso": "Landing points e estado em serviço do sistema EllaLink."
+      },
+      "brusa": {
+        "nome": "TeleGeography — BRUSA",
+        "url": "https://www.submarinecablemap.com/submarine-cable/brusa",
+        "uso": "Landing points e estado em serviço do sistema BRUSA."
+      },
+      "marea": {
+        "nome": "TeleGeography — MAREA",
+        "url": "https://www.submarinecablemap.com/submarine-cable/marea",
+        "uso": "Landing points e estado em serviço do sistema MAREA."
+      },
+      "grace-hopper": {
+        "nome": "TeleGeography — Grace Hopper",
+        "url": "https://www.submarinecablemap.com/submarine-cable/grace-hopper",
+        "uso": "Landing points e estado em serviço do sistema Grace Hopper."
+      },
+      "2africa": {
+        "nome": "TeleGeography — 2Africa",
+        "url": "https://www.submarinecablemap.com/submarine-cable/2africa",
+        "uso": "Landing points e estado em serviço do sistema 2Africa."
+      },
+      "iax": {
+        "nome": "TeleGeography — India Asia Xpress (IAX)",
+        "url": "https://www.submarinecablemap.com/submarine-cable/india-asia-xpress-iax",
+        "uso": "Landing points e estado em serviço do sistema IAX."
+      },
+      "indigo-west": {
+        "nome": "TeleGeography — INDIGO-West",
+        "url": "https://www.submarinecablemap.com/submarine-cable/indigo-west",
+        "uso": "Landing points e estado em serviço do sistema INDIGO-West."
+      },
+      "indigo-central": {
+        "nome": "TeleGeography — INDIGO-Central",
+        "url": "https://www.submarinecablemap.com/submarine-cable/indigo-central",
+        "uso": "Landing points e estado em serviço do sistema INDIGO-Central."
+      },
+      "southern-cross-next": {
+        "nome": "TeleGeography — Southern Cross NEXT",
+        "url": "https://www.submarinecablemap.com/submarine-cable/southern-cross-next",
+        "uso": "Landing points e estado em serviço do sistema Southern Cross NEXT."
+      },
+      "jupiter": {
+        "nome": "TeleGeography — JUPITER",
+        "url": "https://www.submarinecablemap.com/submarine-cable/jupiter",
+        "uso": "Landing points e estado em serviço do sistema JUPITER."
+      },
+      "sjc2": {
+        "nome": "TeleGeography — Southeast Asia-Japan Cable 2",
+        "url": "https://www.submarinecablemap.com/submarine-cable/southeast-asia-japan-cable-2-sjc2",
+        "uso": "Landing points e estado em serviço do sistema SJC2."
+      },
+      "eig": {
+        "nome": "TeleGeography — Europe India Gateway",
+        "url": "https://www.submarinecablemap.com/submarine-cable/europe-india-gateway-eig",
+        "uso": "Landing points e estado em serviço do sistema EIG."
+      },
+      "ace": {
+        "nome": "TeleGeography — Africa Coast to Europe",
+        "url": "https://www.submarinecablemap.com/submarine-cable/africa-coast-to-europe-ace",
+        "uso": "Landing points e estado em serviço do sistema ACE."
+      }
+    }
+  },
+  "nos": [
+    {"id": "las-toninas", "nome": "Las Toninas, Argentina", "lat": -36.4833, "lon": -56.7},
+    {"id": "punta-del-este", "nome": "Punta del Este, Uruguai", "lat": -34.96, "lon": -54.95},
+    {"id": "praia-grande", "nome": "Praia Grande / Santos (São Paulo), Brasil", "lat": -24.0058, "lon": -46.4028},
+    {"id": "fortaleza", "nome": "Fortaleza, Brasil", "lat": -3.7319, "lon": -38.5267},
+    {"id": "myrtle-beach", "nome": "Myrtle Beach, Estados Unidos", "lat": 33.6891, "lon": -78.8867},
+    {"id": "virginia-beach", "nome": "Virginia Beach, Estados Unidos", "lat": 36.8529, "lon": -75.978},
+    {"id": "bellport", "nome": "Bellport / Nova York, Estados Unidos", "lat": 40.757, "lon": -72.9393},
+    {"id": "bilbao", "nome": "Bilbao, Espanha", "lat": 43.263, "lon": -2.935},
+    {"id": "bude", "nome": "Bude, Reino Unido", "lat": 50.8289, "lon": -4.5469},
+    {"id": "sines", "nome": "Sines, Portugal", "lat": 37.9562, "lon": -8.8698},
+    {"id": "carcavelos", "nome": "Carcavelos / Lisboa, Portugal", "lat": 38.691, "lon": -9.322},
+    {"id": "marseille", "nome": "Marseille, França", "lat": 43.2965, "lon": 5.3698},
+    {"id": "accra", "nome": "Accra, Gana", "lat": 5.6037, "lon": -0.187},
+    {"id": "lagos", "nome": "Lagos, Nigéria", "lat": 6.5244, "lon": 3.3792},
+    {"id": "yzerfontein", "nome": "Yzerfontein / Cidade do Cabo, África do Sul", "lat": -33.3444, "lon": 18.1629},
+    {"id": "maputo", "nome": "Maputo, Moçambique", "lat": -25.9692, "lon": 32.5732},
+    {"id": "mombasa", "nome": "Mombasa, Quênia", "lat": -4.0435, "lon": 39.6682},
+    {"id": "djibouti", "nome": "Djibouti, Djibouti", "lat": 11.5721, "lon": 43.1456},
+    {"id": "jeddah", "nome": "Jeddah, Arábia Saudita", "lat": 21.4858, "lon": 39.1925},
+    {"id": "mumbai", "nome": "Mumbai, Índia", "lat": 19.076, "lon": 72.8777},
+    {"id": "singapore", "nome": "Singapura (Tuas/Changi)", "lat": 1.3521, "lon": 103.8198},
+    {"id": "perth", "nome": "Perth, Austrália", "lat": -31.9523, "lon": 115.8613},
+    {"id": "sydney", "nome": "Sydney (Alexandria), Austrália", "lat": -33.8688, "lon": 151.2093},
+    {"id": "auckland", "nome": "Auckland (Takapuna), Nova Zelândia", "lat": -36.8509, "lon": 174.7645},
+    {"id": "los-angeles", "nome": "Los Angeles (Hermosa Beach), Estados Unidos", "lat": 33.8647, "lon": -118.3971},
+    {"id": "chiba", "nome": "Chiba (Chikura/Maruyama), Japão", "lat": 35.033, "lon": 140.1}
+  ],
+  "arestas": [
+    {"origem": "myrtle-beach", "destino": "praia-grande", "peso": 7278, "cabo": "Firmina", "fontes": ["firmina"]},
+    {"origem": "praia-grande", "destino": "punta-del-este", "peso": 1471, "cabo": "Firmina", "fontes": ["firmina"]},
+    {"origem": "punta-del-este", "destino": "las-toninas", "peso": 232, "cabo": "Firmina", "fontes": ["firmina"]},
+    {"origem": "praia-grande", "destino": "fortaleza", "peso": 2407, "cabo": "Monet", "fontes": ["monet"]},
+    {"origem": "fortaleza", "destino": "sines", "peso": 5552, "cabo": "EllaLink", "fontes": ["ellalink"]},
+    {"origem": "fortaleza", "destino": "virginia-beach", "peso": 5949, "cabo": "BRUSA", "fontes": ["brusa"]},
+    {"origem": "virginia-beach", "destino": "bilbao", "peso": 6058, "cabo": "MAREA", "fontes": ["marea"]},
+    {"origem": "bellport", "destino": "bilbao", "peso": 5616, "cabo": "Grace Hopper", "fontes": ["grace-hopper"]},
+    {"origem": "bellport", "destino": "bude", "peso": 5223, "cabo": "Grace Hopper", "fontes": ["grace-hopper"]},
+    {"origem": "bude", "destino": "carcavelos", "peso": 1401, "cabo": "2Africa", "fontes": ["2africa"]},
+    {"origem": "carcavelos", "destino": "accra", "peso": 3793, "cabo": "2Africa", "fontes": ["2africa"]},
+    {"origem": "accra", "destino": "lagos", "peso": 407, "cabo": "2Africa", "fontes": ["2africa"]},
+    {"origem": "lagos", "destino": "yzerfontein", "peso": 4700, "cabo": "2Africa", "fontes": ["2africa"]},
+    {"origem": "yzerfontein", "destino": "maputo", "peso": 1614, "cabo": "2Africa", "fontes": ["2africa"]},
+    {"origem": "maputo", "destino": "mombasa", "peso": 2553, "cabo": "2Africa", "fontes": ["2africa"]},
+    {"origem": "mombasa", "destino": "djibouti", "peso": 1778, "cabo": "2Africa", "fontes": ["2africa"]},
+    {"origem": "djibouti", "destino": "jeddah", "peso": 1180, "cabo": "2Africa", "fontes": ["2africa"]},
+    {"origem": "jeddah", "destino": "mumbai", "peso": 3517, "cabo": "2Africa", "fontes": ["2africa"]},
+    {"origem": "mumbai", "destino": "marseille", "peso": 6765, "cabo": "2Africa", "fontes": ["2africa"]},
+    {"origem": "marseille", "destino": "carcavelos", "peso": 1333, "cabo": "2Africa", "fontes": ["2africa"]},
+    {"origem": "mumbai", "destino": "singapore", "peso": 3904, "cabo": "India Asia Xpress (IAX)", "fontes": ["iax"]},
+    {"origem": "singapore", "destino": "perth", "peso": 3915, "cabo": "INDIGO-West", "fontes": ["indigo-west"]},
+    {"origem": "perth", "destino": "sydney", "peso": 3290, "cabo": "INDIGO-Central", "fontes": ["indigo-central"]},
+    {"origem": "sydney", "destino": "auckland", "peso": 2156, "cabo": "Southern Cross NEXT", "fontes": ["southern-cross-next"]},
+    {"origem": "auckland", "destino": "los-angeles", "peso": 10472, "cabo": "Southern Cross NEXT", "fontes": ["southern-cross-next"]},
+    {"origem": "los-angeles", "destino": "chiba", "peso": 8827, "cabo": "JUPITER", "fontes": ["jupiter"]},
+    {"origem": "chiba", "destino": "singapore", "peso": 5300, "cabo": "SJC2", "fontes": ["sjc2"]},
+    {"origem": "bude", "destino": "mumbai", "peso": 7501, "cabo": "Europe India Gateway (EIG)", "fontes": ["eig"]},
+    {"origem": "carcavelos", "destino": "lagos", "peso": 3798, "cabo": "Africa Coast to Europe (ACE)", "fontes": ["ace"]},
+    {"origem": "sydney", "destino": "los-angeles", "peso": 12051, "cabo": "Southern Cross NEXT", "fontes": ["southern-cross-next"]}
+  ]
+}

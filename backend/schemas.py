@@ -19,6 +19,9 @@ class NoState(BaseModel):
     """Estado publicado de um roteador da malha."""
 
     id: str
+    nome: str
+    lat: float
+    lon: float
     ativo: bool = Field(description="False quando o no foi derrubado pela simulacao")
 
 
@@ -32,6 +35,8 @@ class ArestaState(BaseModel):
     origem: str
     destino: str
     peso: float
+    cabo: str
+    fontes: list[str]
     ativo: bool = Field(description="False quando o cabo foi derrubado pela simulacao")
 
 
