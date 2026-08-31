@@ -26,7 +26,7 @@ from backend.simulation import (
     restaurar_aresta,
     restaurar_no,
 )
-from backend.state import get_network
+from backend.state import get_network, network_lifespan
 
 # O contrato HTTP usa `bellman_ford` (identificador valido em qualquer
 # linguagem cliente) e o dominio usa `bellman-ford`; o mapa isola a traducao.
@@ -39,6 +39,7 @@ app = FastAPI(
     title="Simulador de Colapso de Internet",
     description="API de topologia, roteamento dinamico e injecao de falhas na malha.",
     version="0.1.0",
+    lifespan=network_lifespan,
 )
 
 # Em desenvolvimento o front-end e servido de uma porta arbitraria de localhost.
@@ -76,14 +77,14 @@ def status() -> StatusResponse:
 def obter_grafo(network: NetworkDep) -> GrafoState:
     """Retorna a topologia completa com o estado corrente de nos e cabos."""
     return GrafoState(
-        nos=[
-            NoState(id=node_id, ativo=network.is_node_up(node_id)) for node_id in network.node_ids()
-        ],
+        nos=[_no_state(node.id, network) for node in network.nodes()],
         arestas=[
             ArestaState(
                 origem=origem,
                 destino=edge.destination,
                 peso=edge.weight,
+                cabo=edge.cable,
+                fontes=list(edge.source_ids),
                 ativo=edge.is_up,
             )
             for origem, edge in network.edges()
@@ -111,7 +112,7 @@ def derrubar_no_endpoint(no_id: str, network: NetworkDep) -> NoState:
     """Tira um roteador do ar sem remove-lo da topologia."""
     with _traduz_erros():
         derrubar_no(network, no_id)
-    return NoState(id=no_id, ativo=False)
+    return _no_state(no_id, network)
 
 
 @app.post("/nos/{no_id}/restaurar")
@@ -119,7 +120,7 @@ def restaurar_no_endpoint(no_id: str, network: NetworkDep) -> NoState:
     """Devolve um roteador ao ar, sem alterar o estado dos cabos."""
     with _traduz_erros():
         restaurar_no(network, no_id)
-    return NoState(id=no_id, ativo=True)
+    return _no_state(no_id, network)
 
 
 @app.post("/arestas/derrubar")
@@ -127,8 +128,8 @@ def derrubar_aresta_endpoint(cabo: ArestaRequest, network: NetworkDep) -> Aresta
     """Tira um cabo bidirecional do ar."""
     with _traduz_erros():
         derrubar_aresta(network, cabo.origem, cabo.destino)
-        peso = _peso_do_cabo(network, cabo.origem, cabo.destino)
-    return ArestaState(origem=cabo.origem, destino=cabo.destino, peso=peso, ativo=False)
+        estado = _aresta_state(network, cabo.origem, cabo.destino)
+    return estado
 
 
 @app.post("/arestas/restaurar")
@@ -136,13 +137,31 @@ def restaurar_aresta_endpoint(cabo: ArestaRequest, network: NetworkDep) -> Arest
     """Devolve um cabo bidirecional ao ar."""
     with _traduz_erros():
         restaurar_aresta(network, cabo.origem, cabo.destino)
-        peso = _peso_do_cabo(network, cabo.origem, cabo.destino)
-    return ArestaState(origem=cabo.origem, destino=cabo.destino, peso=peso, ativo=True)
+        estado = _aresta_state(network, cabo.origem, cabo.destino)
+    return estado
 
 
-def _peso_do_cabo(network: Network, origem: str, destino: str) -> float:
-    """Recupera o peso de um cabo ja validado pela operacao anterior."""
+def _aresta_state(network: Network, origem: str, destino: str) -> ArestaState:
+    """Recupera os dados de um cabo ja validado pela operacao anterior."""
     for node_id, edge in network.edges():
         if {node_id, edge.destination} == {origem, destino}:
-            return edge.weight
+            return ArestaState(
+                origem=origem,
+                destino=destino,
+                peso=edge.weight,
+                cabo=edge.cable,
+                fontes=list(edge.source_ids),
+                ativo=edge.is_up,
+            )
     raise KeyError(f"Edge does not exist: {origem!r} - {destino!r}")
+
+
+def _no_state(node_id: str, network: Network) -> NoState:
+    node = network.get_node(node_id)
+    return NoState(
+        id=node.id,
+        nome=node.name,
+        lat=node.lat,
+        lon=node.lon,
+        ativo=node.is_up,
+    )

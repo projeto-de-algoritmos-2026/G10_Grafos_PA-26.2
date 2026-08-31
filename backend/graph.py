@@ -11,6 +11,19 @@ class Edge:
 
     destination: str
     weight: float
+    cable: str = "synthetic"
+    source_ids: tuple[str, ...] = ()
+    is_up: bool = True
+
+
+@dataclass(slots=True)
+class Node:
+    """No da malha com os metadados necessarios para a visualizacao."""
+
+    id: str
+    name: str
+    lat: float
+    lon: float
     is_up: bool = True
 
 
@@ -27,16 +40,31 @@ class Network:
 
     def __init__(self) -> None:
         self._adjacency: dict[str, list[Edge]] = {}
-        self._node_status: dict[str, bool] = {}
+        self._nodes: dict[str, Node] = {}
 
-    def add_node(self, node_id: str) -> None:
+    def add_node(
+        self,
+        node_id: str,
+        *,
+        name: str | None = None,
+        lat: float = 0.0,
+        lon: float = 0.0,
+    ) -> None:
         """Adiciona um no ativo; adicionar novamente o mesmo no nao tem efeito."""
         self._validate_node_id(node_id)
         if node_id not in self._adjacency:
             self._adjacency[node_id] = []
-            self._node_status[node_id] = True
+            self._nodes[node_id] = Node(node_id, name or node_id, float(lat), float(lon))
 
-    def add_edge(self, origin: str, destination: str, weight: float) -> None:
+    def add_edge(
+        self,
+        origin: str,
+        destination: str,
+        weight: float,
+        *,
+        cable: str = "synthetic",
+        source_ids: tuple[str, ...] = (),
+    ) -> None:
         """Adiciona um cabo bidirecional entre dois nos existentes."""
         self._require_node(origin)
         self._require_node(destination)
@@ -48,18 +76,18 @@ class Network:
             raise ValueError(f"Edge already exists: {origin!r} - {destination!r}")
 
         numeric_weight = float(weight)
-        self._adjacency[origin].append(Edge(destination, numeric_weight))
-        self._adjacency[destination].append(Edge(origin, numeric_weight))
+        self._adjacency[origin].append(Edge(destination, numeric_weight, cable, source_ids))
+        self._adjacency[destination].append(Edge(origin, numeric_weight, cable, source_ids))
 
     def set_node_down(self, node_id: str) -> None:
         """Marca um no como indisponivel sem remove-lo da estrutura."""
         self._require_node(node_id)
-        self._node_status[node_id] = False
+        self._nodes[node_id].is_up = False
 
     def set_node_up(self, node_id: str) -> None:
         """Marca um no como disponivel sem alterar o estado de suas arestas."""
         self._require_node(node_id)
-        self._node_status[node_id] = True
+        self._nodes[node_id].is_up = True
 
     def set_edge_down(self, origin: str, destination: str) -> None:
         """Marca as duas entradas de um cabo como indisponiveis."""
@@ -72,18 +100,18 @@ class Network:
     def neighbors(self, node_id: str) -> list[Edge]:
         """Retorna copias das conexoes disponiveis de um no disponivel."""
         self._require_node(node_id)
-        if not self._node_status[node_id]:
+        if not self._nodes[node_id].is_up:
             return []
         return [
-            Edge(edge.destination, edge.weight, edge.is_up)
+            Edge(edge.destination, edge.weight, edge.cable, edge.source_ids, edge.is_up)
             for edge in self._adjacency[node_id]
-            if edge.is_up and self._node_status[edge.destination]
+            if edge.is_up and self._nodes[edge.destination].is_up
         ]
 
     def is_node_up(self, node_id: str) -> bool:
         """Informa se um no existe e esta disponivel."""
         self._require_node(node_id)
-        return self._node_status[node_id]
+        return self._nodes[node_id].is_up
 
     def is_edge_up(self, origin: str, destination: str) -> bool:
         """Informa o estado do cabo, independentemente do estado dos seus nos."""
@@ -94,6 +122,19 @@ class Network:
         """Retorna os identificadores dos nos na ordem de insercao."""
         return tuple(self._adjacency)
 
+    def nodes(self) -> tuple[Node, ...]:
+        """Retorna copias dos nos na ordem de insercao."""
+        return tuple(
+            Node(node.id, node.name, node.lat, node.lon, node.is_up)
+            for node in self._nodes.values()
+        )
+
+    def get_node(self, node_id: str) -> Node:
+        """Retorna uma copia de um no existente."""
+        self._require_node(node_id)
+        node = self._nodes[node_id]
+        return Node(node.id, node.name, node.lat, node.lon, node.is_up)
+
     def edges(self) -> tuple[tuple[str, Edge], ...]:
         """Retorna cada cabo uma unica vez, incluindo os indisponiveis."""
         result: list[tuple[str, Edge]] = []
@@ -103,7 +144,18 @@ class Network:
                 key = frozenset((origin, edge.destination))
                 if key not in visited:
                     visited.add(key)
-                    result.append((origin, Edge(edge.destination, edge.weight, edge.is_up)))
+                    result.append(
+                        (
+                            origin,
+                            Edge(
+                                edge.destination,
+                                edge.weight,
+                                edge.cable,
+                                edge.source_ids,
+                                edge.is_up,
+                            ),
+                        )
+                    )
         return tuple(result)
 
     def _set_edge_status(self, origin: str, destination: str, *, is_up: bool) -> None:

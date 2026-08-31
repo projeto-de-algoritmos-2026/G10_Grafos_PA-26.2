@@ -1,6 +1,5 @@
 """Testes de integracao dos endpoints HTTP da simulacao."""
 
-import json
 from collections.abc import Iterator
 from pathlib import Path
 
@@ -37,6 +36,7 @@ def test_grafo_publica_topologia_completa_e_ativa(client: TestClient):
 
     assert [no["id"] for no in corpo["nos"]] == ["A", "B", "C", "D", "isolated"]
     assert all(no["ativo"] for no in corpo["nos"])
+    assert all({"nome", "lat", "lon"} <= no.keys() for no in corpo["nos"])
     assert {
         (aresta["origem"], aresta["destino"], aresta["peso"]) for aresta in corpo["arestas"]
     } == {
@@ -47,6 +47,7 @@ def test_grafo_publica_topologia_completa_e_ativa(client: TestClient):
         ("C", "D", 5.0),
     }
     assert all(aresta["ativo"] for aresta in corpo["arestas"])
+    assert all({"cabo", "fontes"} <= aresta.keys() for aresta in corpo["arestas"])
 
 
 @pytest.mark.parametrize("algoritmo", ["dijkstra", "bellman_ford"])
@@ -114,7 +115,13 @@ def test_derrubar_no_muda_o_grafo_e_forca_desvio(client: TestClient):
     response = client.post("/nos/B/derrubar")
 
     assert response.status_code == 200
-    assert response.json() == {"id": "B", "ativo": False}
+    assert response.json() == {
+        "id": "B",
+        "nome": "B",
+        "lat": 0.0,
+        "lon": 0.0,
+        "ativo": False,
+    }
 
     grafo = client.get("/grafo").json()
     assert [no["ativo"] for no in grafo["nos"] if no["id"] == "B"] == [False]
@@ -130,7 +137,13 @@ def test_restaurar_no_recupera_a_rota_original(client: TestClient):
     response = client.post("/nos/B/restaurar")
 
     assert response.status_code == 200
-    assert response.json() == {"id": "B", "ativo": True}
+    assert response.json() == {
+        "id": "B",
+        "nome": "B",
+        "lat": 0.0,
+        "lon": 0.0,
+        "ativo": True,
+    }
     assert client.post("/rota", json={"origem": "A", "destino": "D"}).json()["caminho"] == [
         "A",
         "B",
@@ -150,7 +163,14 @@ def test_derrubar_aresta_muda_o_grafo_e_forca_desvio(client: TestClient):
     response = client.post("/arestas/derrubar", json={"origem": "B", "destino": "D"})
 
     assert response.status_code == 200
-    assert response.json() == {"origem": "B", "destino": "D", "peso": 2.0, "ativo": False}
+    assert response.json() == {
+        "origem": "B",
+        "destino": "D",
+        "peso": 2.0,
+        "cabo": "synthetic",
+        "fontes": [],
+        "ativo": False,
+    }
 
     grafo = client.get("/grafo").json()
     inativas = [aresta for aresta in grafo["arestas"] if not aresta["ativo"]]
@@ -214,26 +234,33 @@ def test_openapi_documenta_todos_os_endpoints_tipados(client: TestClient):
     )
 
 
-def test_malha_padrao_e_conexa_e_permite_rota_entre_os_extremos():
-    """Sem o dataset da issue #8, a API ainda sobe com uma malha utilizavel."""
-    network = load_network(Path("caminho/inexistente/rede.json"))
+def test_dataset_real_carrega_metadados_e_permite_rota_global():
+    network = load_network()
 
-    assert len(network.node_ids()) >= 2
+    assert len(network.node_ids()) == 26
+    assert len(network.edges()) == 30
+    assert network.get_node("chiba").name.endswith("Japão")
+
+    response = TestClient(app)
+    app.dependency_overrides[get_network] = lambda: network
+    try:
+        rota = response.post("/rota", json={"origem": "praia-grande", "destino": "chiba"}).json()
+    finally:
+        app.dependency_overrides.clear()
+
+    assert rota["encontrada"] is True
+    assert rota["caminho"][0] == "praia-grande"
+    assert rota["caminho"][-1] == "chiba"
 
 
-def test_dataset_em_disco_substitui_a_malha_padrao(tmp_path: Path):
-    dataset = tmp_path / "rede.json"
-    dataset.write_text(
-        json.dumps(
-            {
-                "nos": [{"id": "sp", "nome": "Sao Paulo"}, {"id": "tok", "nome": "Toquio"}],
-                "arestas": [{"origem": "sp", "destino": "tok", "peso": 250}],
-            }
-        ),
-        encoding="utf-8",
-    )
+def test_dataset_ausente_impede_inicializacao():
+    with pytest.raises(RuntimeError, match="not found"):
+        load_network(Path("caminho/inexistente/rede.json"))
 
-    network = load_network(dataset)
 
-    assert network.node_ids() == ("sp", "tok")
-    assert network.is_edge_up("sp", "tok")
+def test_lifespan_carrega_dataset_antes_da_primeira_requisicao():
+    with TestClient(app) as startup_client:
+        response = startup_client.get("/grafo")
+
+    assert response.status_code == 200
+    assert len(response.json()["nos"]) == 26
