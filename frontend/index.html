@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Simulador visual de rotas e falhas em uma rede mundial de internet."
+    />
+    <title>Simulador de Colapso de Internet</title>
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/vis-network@9.1.9/styles/vis-network.min.css"
+    />
+    <link rel="stylesheet" href="/style.css" />
+    <script
+      defer
+      src="https://unpkg.com/vis-network@9.1.9/standalone/umd/vis-network.min.js"
+    ></script>
+    <script defer src="/app.js"></script>
+  </head>
+  <body>
+    <main class="page-shell">
+      <header class="hero">
+        <p class="eyebrow">Projeto de Algoritmos · Grafos</p>
+        <h1>Simulador de Colapso de Internet</h1>
+        <p class="hero-description">
+          Explore como falhas em roteadores e cabos alteram as rotas de uma rede mundial.
+        </p>
+      </header>
+
+      <section class="workspace" aria-labelledby="network-title">
+        <div class="workspace-heading">
+          <div>
+            <p class="section-label">Topologia mundial</p>
+            <h2 id="network-title">Estado da rede</h2>
+          </div>
+          <p id="api-status" class="status status-loading" role="status" aria-live="polite">
+            Conectando à API…
+          </p>
+        </div>
+
+        <div id="api-error" class="error-message" role="alert" hidden></div>
+
+        <div id="network" class="network-canvas" aria-busy="true">
+          <div class="network-placeholder">
+            <span class="loading-indicator" aria-hidden="true"></span>
+            <p>Carregando dados da rede…</p>
+          </div>
+        </div>
+
+        <dl class="network-summary" aria-label="Resumo da topologia">
+          <div>
+            <dt>Roteadores</dt>
+            <dd id="node-count">—</dd>
+          </div>
+          <div>
+            <dt>Conexões</dt>
+            <dd id="edge-count">—</dd>
+          </div>
+          <div>
+            <dt>Visualização</dt>
+            <dd id="library-status">Aguardando</dd>
+          </div>
+        </dl>
+      </section>
+    </main>
+  </body>
+</html>
