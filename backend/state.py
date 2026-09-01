@@ -51,6 +51,7 @@ def load_network(data_file: Path = DATA_FILE) -> Network:
 async def network_lifespan(app: FastAPI) -> AsyncIterator[None]:
     """Carrega uma unica rede stateful antes de a API aceitar requisicoes."""
     app.state.network = load_network()
+    app.state.rota_atual = None
     yield
 
 

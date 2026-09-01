@@ -42,12 +42,35 @@
 
         <div id="api-error" class="error-message" role="alert" hidden></div>
 
+        <section class="route-summary" aria-labelledby="route-title" aria-live="polite">
+          <p id="route-title" class="route-label">Rota atual</p>
+          <p id="route-description" class="route-description">
+            Nenhuma rota foi calculada ainda.
+          </p>
+          <p id="route-details" class="route-details">
+            Use o endpoint <code>POST /rota</code> e recarregue esta página.
+          </p>
+        </section>
+
         <div id="network" class="network-canvas" aria-busy="true">
           <div class="network-placeholder">
             <span class="loading-indicator" aria-hidden="true"></span>
             <p>Carregando dados da rede…</p>
           </div>
         </div>
+
+        <aside class="legend" aria-labelledby="legend-title">
+          <h3 id="legend-title">Legenda</h3>
+          <ul>
+            <li><span class="legend-node legend-node-active"></span>Nó ativo</li>
+            <li><span class="legend-node legend-node-down"></span>Nó derrubado</li>
+            <li><span class="legend-node legend-node-origin"></span>Origem</li>
+            <li><span class="legend-node legend-node-destination"></span>Destino</li>
+            <li><span class="legend-edge legend-edge-active"></span>Conexão ativa</li>
+            <li><span class="legend-edge legend-edge-down"></span>Conexão derrubada</li>
+            <li><span class="legend-edge legend-edge-route"></span>Caminho atual</li>
+          </ul>
+        </aside>
 
         <dl class="network-summary" aria-label="Resumo da topologia">
           <div>

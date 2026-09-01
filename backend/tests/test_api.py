@@ -20,8 +20,10 @@ def client(network: Network) -> Iterator[TestClient]:
     o seguinte.
     """
     app.dependency_overrides[get_network] = lambda: network
+    app.state.rota_atual = None
     yield TestClient(app)
     app.dependency_overrides.clear()
+    app.state.rota_atual = None
 
 
 def test_status_ok(client: TestClient):
@@ -68,6 +70,41 @@ def test_grafo_publica_topologia_completa_e_ativa(client: TestClient):
     }
     assert all(aresta["ativo"] for aresta in corpo["arestas"])
     assert all({"cabo", "fontes"} <= aresta.keys() for aresta in corpo["arestas"])
+    assert corpo["rota_atual"] is None
+
+
+def test_grafo_publica_a_ultima_rota_calculada(client: TestClient):
+    client.post("/rota", json={"origem": "A", "destino": "D", "algoritmo": "dijkstra"})
+
+    rota_atual = client.get("/grafo").json()["rota_atual"]
+
+    assert rota_atual == {
+        "origem": "A",
+        "destino": "D",
+        "caminho": ["A", "B", "D"],
+        "custo": 3.0,
+        "encontrada": True,
+        "algoritmo": "dijkstra",
+    }
+
+
+def test_grafo_preserva_extremos_quando_rota_nao_existe(client: TestClient):
+    client.post("/rota", json={"origem": "A", "destino": "isolated"})
+
+    rota_atual = client.get("/grafo").json()["rota_atual"]
+
+    assert rota_atual["origem"] == "A"
+    assert rota_atual["destino"] == "isolated"
+    assert rota_atual["caminho"] == []
+    assert rota_atual["encontrada"] is False
+
+
+def test_mudanca_na_topologia_invalida_rota_atual(client: TestClient):
+    client.post("/rota", json={"origem": "A", "destino": "D"})
+
+    client.post("/nos/B/derrubar")
+
+    assert client.get("/grafo").json()["rota_atual"] is None
 
 
 @pytest.mark.parametrize("algoritmo", ["dijkstra", "bellman_ford"])
@@ -249,7 +286,7 @@ def test_openapi_documenta_todos_os_endpoints_tipados(client: TestClient):
         "/arestas/derrubar",
         "/arestas/restaurar",
     }
-    assert {"GrafoState", "RotaRequest", "RotaResult", "ArestaRequest"} <= set(
+    assert {"GrafoState", "RotaAtual", "RotaRequest", "RotaResult", "ArestaRequest"} <= set(
         schema["components"]["schemas"]
     )
 
