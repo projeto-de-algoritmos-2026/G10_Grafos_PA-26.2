@@ -5,7 +5,7 @@ from contextlib import contextmanager
 from pathlib import Path
 from typing import Annotated
 
-from fastapi import Depends, FastAPI, HTTPException
+from fastapi import Depends, FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
@@ -16,6 +16,7 @@ from backend.schemas import (
     ArestaState,
     GrafoState,
     NoState,
+    RotaAtual,
     RotaRequest,
     RotaResult,
     StatusResponse,
@@ -77,7 +78,7 @@ def status() -> StatusResponse:
 
 
 @app.get("/grafo")
-def obter_grafo(network: NetworkDep) -> GrafoState:
+def obter_grafo(request: Request, network: NetworkDep) -> GrafoState:
     """Retorna a topologia completa com o estado corrente de nos e cabos."""
     return GrafoState(
         nos=[_no_state(node.id, network) for node in network.nodes()],
@@ -92,11 +93,12 @@ def obter_grafo(network: NetworkDep) -> GrafoState:
             )
             for origem, edge in network.edges()
         ],
+        rota_atual=getattr(request.app.state, "rota_atual", None),
     )
 
 
 @app.post("/rota")
-def calcular_rota(pedido: RotaRequest, network: NetworkDep) -> RotaResult:
+def calcular_rota(pedido: RotaRequest, request: Request, network: NetworkDep) -> RotaResult:
     """Calcula a melhor rota atual entre dois roteadores.
 
     Rede particionada nao e erro: devolve 200 com ``encontrada=False``, que e o
@@ -107,41 +109,60 @@ def calcular_rota(pedido: RotaRequest, network: NetworkDep) -> RotaResult:
         resultado = recalcular_rota(
             network, pedido.origem, pedido.destino, _ALGORITMOS[pedido.algoritmo]
         )
-    return RotaResult.from_domain(resultado, pedido.algoritmo)
+    resposta = RotaResult.from_domain(resultado, pedido.algoritmo)
+    request.app.state.rota_atual = RotaAtual(
+        origem=pedido.origem,
+        destino=pedido.destino,
+        **resposta.model_dump(),
+    )
+    return resposta
 
 
 @app.post("/nos/{no_id}/derrubar")
-def derrubar_no_endpoint(no_id: str, network: NetworkDep) -> NoState:
+def derrubar_no_endpoint(no_id: str, request: Request, network: NetworkDep) -> NoState:
     """Tira um roteador do ar sem remove-lo da topologia."""
     with _traduz_erros():
         derrubar_no(network, no_id)
+    _invalidar_rota(request)
     return _no_state(no_id, network)
 
 
 @app.post("/nos/{no_id}/restaurar")
-def restaurar_no_endpoint(no_id: str, network: NetworkDep) -> NoState:
+def restaurar_no_endpoint(no_id: str, request: Request, network: NetworkDep) -> NoState:
     """Devolve um roteador ao ar, sem alterar o estado dos cabos."""
     with _traduz_erros():
         restaurar_no(network, no_id)
+    _invalidar_rota(request)
     return _no_state(no_id, network)
 
 
 @app.post("/arestas/derrubar")
-def derrubar_aresta_endpoint(cabo: ArestaRequest, network: NetworkDep) -> ArestaState:
+def derrubar_aresta_endpoint(
+    cabo: ArestaRequest, request: Request, network: NetworkDep
+) -> ArestaState:
     """Tira um cabo bidirecional do ar."""
     with _traduz_erros():
         derrubar_aresta(network, cabo.origem, cabo.destino)
         estado = _aresta_state(network, cabo.origem, cabo.destino)
+    _invalidar_rota(request)
     return estado
 
 
 @app.post("/arestas/restaurar")
-def restaurar_aresta_endpoint(cabo: ArestaRequest, network: NetworkDep) -> ArestaState:
+def restaurar_aresta_endpoint(
+    cabo: ArestaRequest, request: Request, network: NetworkDep
+) -> ArestaState:
     """Devolve um cabo bidirecional ao ar."""
     with _traduz_erros():
         restaurar_aresta(network, cabo.origem, cabo.destino)
         estado = _aresta_state(network, cabo.origem, cabo.destino)
+    _invalidar_rota(request)
     return estado
+
+
+def _invalidar_rota(request: Request) -> None:
+    """Remove o destaque quando uma mudanca torna a rota armazenada obsoleta."""
+    request.app.state.rota_atual = None
 
 
 def _aresta_state(network: Network, origem: str, destino: str) -> ArestaState:

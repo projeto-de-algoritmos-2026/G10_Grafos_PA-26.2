@@ -40,13 +40,6 @@ class ArestaState(BaseModel):
     ativo: bool = Field(description="False quando o cabo foi derrubado pela simulacao")
 
 
-class GrafoState(BaseModel):
-    """Topologia completa da malha com o estado corrente de nos e cabos."""
-
-    nos: list[NoState]
-    arestas: list[ArestaState]
-
-
 class RotaRequest(BaseModel):
     """Pedido de calculo de rota entre dois roteadores."""
 
@@ -83,6 +76,21 @@ class RotaResult(BaseModel):
             encontrada=resultado.found,
             algoritmo=algoritmo,
         )
+
+
+class RotaAtual(RotaResult):
+    """Ultima consulta de rota, incluindo os extremos mesmo sem caminho."""
+
+    origem: str
+    destino: str
+
+
+class GrafoState(BaseModel):
+    """Topologia completa e ultima rota calculada pela simulacao."""
+
+    nos: list[NoState]
+    arestas: list[ArestaState]
+    rota_atual: RotaAtual | None = None
 
 
 class StatusResponse(BaseModel):

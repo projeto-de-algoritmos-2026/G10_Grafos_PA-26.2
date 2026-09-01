@@ -37,5 +37,15 @@ Ao abrir a interface, o JSON retornado por `/grafo` é exibido no console do
 navegador. A página também mostra o número de roteadores e conexões. Se a
 requisição falhar, uma mensagem de erro é apresentada na própria interface.
 
-A renderização da topologia e as interações com nós e cabos serão implementadas
-separadamente nas issues `#10` e `#11`.
+## Visualização da topologia
+
+Os nós são posicionados pelo `vis-network` com uma projeção equiretangular
+simples: longitude no eixo horizontal e latitude invertida no eixo vertical. A
+física da biblioteca fica desativada para preservar a posição geográfica.
+
+As conexões mostram o nome do cabo, a distância e o estado em um tooltip. A
+última rota calculada por `POST /rota` é retornada junto de `GET /grafo` e aparece
+destacada depois que a página é recarregada.
+
+As interações para derrubar e restaurar nós e cabos serão implementadas
+separadamente na issue `#11`.
