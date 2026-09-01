@@ -8,6 +8,11 @@ const elements = {
   libraryStatus: document.querySelector("#library-status"),
   routeDescription: document.querySelector("#route-description"),
   routeDetails: document.querySelector("#route-details"),
+  originSelect: document.querySelector("#origin-select"),
+  destinationSelect: document.querySelector("#destination-select"),
+  algoDijkstra: document.querySelector("#algo-dijkstra"),
+  algoBellmanFord: document.querySelector("#algo-bellman-ford"),
+  resetButton: document.querySelector("#reset-button"),
 };
 
 const PROJECTION_SCALE = 6;
@@ -143,9 +148,8 @@ function renderRouteSummary(graph) {
   elements.routeDetails.classList.remove("route-details-warning");
 
   if (!route) {
-    elements.routeDescription.textContent = "Nenhuma rota foi calculada ainda.";
-    elements.routeDetails.innerHTML =
-      'Use o endpoint <code>POST /rota</code> e recarregue esta página.';
+    elements.routeDescription.textContent = "Nenhuma rota selecionada.";
+    elements.routeDetails.textContent = "Selecione origem e destino para calcular uma rota.";
     return;
   }
 
@@ -295,6 +299,93 @@ async function recalculateAndRender() {
   flashRouteEdges(newRouteEdges);
 }
 
+function populateEndpointSelects(graph) {
+  const options = graph.nos
+    .slice()
+    .sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR"))
+    .map((node) => `<option value="${node.id}">${node.nome}</option>`)
+    .join("");
+
+  elements.originSelect.innerHTML = `<option value="">Selecione…</option>${options}`;
+  elements.destinationSelect.innerHTML = `<option value="">Selecione…</option>${options}`;
+  elements.originSelect.value = currentSelection.origem ?? "";
+  elements.destinationSelect.value = currentSelection.destino ?? "";
+}
+
+function setAlgorithm(algoritmo) {
+  currentSelection.algoritmo = algoritmo;
+  elements.algoDijkstra.setAttribute("aria-pressed", String(algoritmo === "dijkstra"));
+  elements.algoBellmanFord.setAttribute("aria-pressed", String(algoritmo === "bellman_ford"));
+}
+
+async function resetSimulation() {
+  try {
+    clearActionError();
+    const downNodes = currentGraph.nos.filter((node) => !node.ativo);
+    const downEdges = currentGraph.arestas.filter((edge) => !edge.ativo);
+    await Promise.all([
+      ...downNodes.map((node) =>
+        fetch(`/nos/${encodeURIComponent(node.id)}/restaurar`, { method: "POST" }),
+      ),
+      ...downEdges.map((edge) =>
+        fetch("/arestas/restaurar", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ origem: edge.origem, destino: edge.destino }),
+        }),
+      ),
+    ]);
+    currentGraph = await fetchGraph();
+    await recalculateAndRender();
+  } catch (error) {
+    showActionError(error);
+  }
+}
+
+function bindControls() {
+  elements.originSelect.addEventListener("change", async (event) => {
+    currentSelection.origem = event.target.value || null;
+    try {
+      clearActionError();
+      await recalculateAndRender();
+    } catch (error) {
+      showActionError(error);
+    }
+  });
+
+  elements.destinationSelect.addEventListener("change", async (event) => {
+    currentSelection.destino = event.target.value || null;
+    try {
+      clearActionError();
+      await recalculateAndRender();
+    } catch (error) {
+      showActionError(error);
+    }
+  });
+
+  elements.algoDijkstra.addEventListener("click", async () => {
+    setAlgorithm("dijkstra");
+    try {
+      clearActionError();
+      await recalculateAndRender();
+    } catch (error) {
+      showActionError(error);
+    }
+  });
+
+  elements.algoBellmanFord.addEventListener("click", async () => {
+    setAlgorithm("bellman_ford");
+    try {
+      clearActionError();
+      await recalculateAndRender();
+    } catch (error) {
+      showActionError(error);
+    }
+  });
+
+  elements.resetButton.addEventListener("click", resetSimulation);
+}
+
 function clearActionError() {
   elements.actionError.hidden = true;
   elements.actionError.textContent = "";
@@ -313,6 +404,9 @@ function showGraph(graph) {
   currentSelection.algoritmo = graph.rota_atual?.algoritmo ?? currentSelection.algoritmo;
 
   buildNetwork(graph);
+  populateEndpointSelects(graph);
+  setAlgorithm(currentSelection.algoritmo);
+  bindControls();
   renderRouteSummary(graph);
   elements.nodeCount.textContent = graph.nos.length;
   elements.edgeCount.textContent = graph.arestas.length;
