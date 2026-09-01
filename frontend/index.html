@@ -41,6 +41,7 @@
         </div>
 
         <div id="api-error" class="error-message" role="alert" hidden></div>
+        <div id="action-error" class="error-message" role="alert" hidden></div>
 
         <section class="route-summary" aria-labelledby="route-title" aria-live="polite">
           <p id="route-title" class="route-label">Rota atual</p>
@@ -51,6 +52,8 @@
             Use o endpoint <code>POST /rota</code> e recarregue esta página.
           </p>
         </section>
+
+        <p class="network-hint">Clique em um nó para derrubá-lo ou restaurá-lo.</p>
 
         <div id="network" class="network-canvas" aria-busy="true">
           <div class="network-placeholder">

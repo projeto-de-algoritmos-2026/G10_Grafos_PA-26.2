@@ -176,6 +176,18 @@ h2 {
   color: #c8f7e9;
 }
 
+.route-details-warning {
+  color: var(--danger);
+  font-weight: 700;
+}
+
+.network-hint {
+  margin: 0;
+  padding: 0.6rem 1.5rem 0;
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
 .network-canvas {
   width: 100%;
   height: clamp(380px, 55vw, 640px);
@@ -183,6 +195,10 @@ h2 {
     linear-gradient(rgba(100, 224, 187, 0.035) 1px, transparent 1px),
     linear-gradient(90deg, rgba(100, 224, 187, 0.035) 1px, transparent 1px);
   background-size: 32px 32px;
+}
+
+.network-canvas canvas {
+  cursor: pointer;
 }
 
 .network-placeholder {
