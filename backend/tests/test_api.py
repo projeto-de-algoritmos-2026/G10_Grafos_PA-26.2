@@ -31,6 +31,26 @@ def test_status_ok(client: TestClient):
     assert response.json() == {"status": "ok"}
 
 
+def test_raiz_serve_a_interface_do_simulador(client: TestClient):
+    response = client.get("/")
+
+    assert response.status_code == 200
+    assert response.headers["content-type"].startswith("text/html")
+    assert "Simulador de Colapso de Internet" in response.text
+    assert 'id="api-error"' in response.text
+
+
+@pytest.mark.parametrize(
+    ("path", "content_type"),
+    [("/app.js", "text/javascript"), ("/style.css", "text/css")],
+)
+def test_frontend_serve_assets_estaticos(client: TestClient, path: str, content_type: str):
+    response = client.get(path)
+
+    assert response.status_code == 200
+    assert response.headers["content-type"].startswith(content_type)
+
+
 def test_grafo_publica_topologia_completa_e_ativa(client: TestClient):
     corpo = client.get("/grafo").json()
 

@@ -2,10 +2,12 @@
 
 from collections.abc import Iterator
 from contextlib import contextmanager
+from pathlib import Path
 from typing import Annotated
 
 from fastapi import Depends, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 
 from backend.graph import Network
 from backend.schemas import (
@@ -51,6 +53,7 @@ app.add_middleware(
 )
 
 NetworkDep = Annotated[Network, Depends(get_network)]
+FRONTEND_DIR = Path(__file__).resolve().parent.parent / "frontend"
 
 
 @contextmanager
@@ -165,3 +168,7 @@ def _no_state(node_id: str, network: Network) -> NoState:
         lon=node.lon,
         ativo=node.is_up,
     )
+
+
+# O mount fica depois das rotas da API para que a raiz do front-end nao as intercepte.
+app.mount("/", StaticFiles(directory=FRONTEND_DIR, html=True), name="frontend")

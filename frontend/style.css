@@ -1,0 +1,244 @@
+:root {
+  color-scheme: dark;
+  font-family:
+    Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  color: #eef6f4;
+  background: #071412;
+  font-synthesis: none;
+  --surface: rgba(12, 35, 31, 0.86);
+  --surface-border: rgba(142, 216, 196, 0.18);
+  --muted: #9eb8b1;
+  --accent: #64e0bb;
+  --accent-soft: rgba(100, 224, 187, 0.12);
+  --danger: #ff8f8f;
+  --danger-soft: rgba(255, 91, 91, 0.12);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  min-width: 320px;
+  min-height: 100vh;
+  margin: 0;
+  background:
+    radial-gradient(circle at 15% 10%, rgba(43, 151, 123, 0.18), transparent 30rem),
+    radial-gradient(circle at 90% 80%, rgba(37, 95, 121, 0.16), transparent 34rem), #071412;
+}
+
+.page-shell {
+  width: min(1120px, calc(100% - 2rem));
+  margin: 0 auto;
+  padding: 4rem 0;
+}
+
+.hero {
+  max-width: 760px;
+  margin-bottom: 2.5rem;
+}
+
+.eyebrow,
+.section-label {
+  margin: 0 0 0.5rem;
+  color: var(--accent);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+h1,
+h2,
+p {
+  margin-top: 0;
+}
+
+h1 {
+  max-width: 700px;
+  margin-bottom: 1rem;
+  font-size: clamp(2.3rem, 6vw, 4.8rem);
+  line-height: 0.98;
+  letter-spacing: -0.05em;
+}
+
+h2 {
+  margin-bottom: 0;
+  font-size: clamp(1.4rem, 3vw, 2rem);
+}
+
+.hero-description {
+  max-width: 650px;
+  margin-bottom: 0;
+  color: var(--muted);
+  font-size: 1.08rem;
+  line-height: 1.7;
+}
+
+.workspace {
+  overflow: hidden;
+  border: 1px solid var(--surface-border);
+  border-radius: 1.25rem;
+  background: var(--surface);
+  box-shadow: 0 1.5rem 5rem rgba(0, 0, 0, 0.24);
+  backdrop-filter: blur(1rem);
+}
+
+.workspace-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.5rem;
+  border-bottom: 1px solid var(--surface-border);
+}
+
+.status {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0.45rem 0.75rem;
+  border-radius: 999px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.status::before {
+  width: 0.48rem;
+  height: 0.48rem;
+  border-radius: 50%;
+  background: currentColor;
+  content: "";
+}
+
+.status-loading {
+  color: #f1cc76;
+  background: rgba(241, 204, 118, 0.1);
+}
+
+.status-success {
+  color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.status-error {
+  color: var(--danger);
+  background: var(--danger-soft);
+}
+
+.error-message {
+  margin: 1.5rem 1.5rem 0;
+  padding: 1rem 1.15rem;
+  border: 1px solid rgba(255, 143, 143, 0.28);
+  border-radius: 0.75rem;
+  color: #ffd4d4;
+  background: var(--danger-soft);
+  line-height: 1.5;
+}
+
+.network-canvas {
+  display: grid;
+  min-height: 420px;
+  place-items: center;
+  background-image:
+    linear-gradient(rgba(100, 224, 187, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(100, 224, 187, 0.035) 1px, transparent 1px);
+  background-size: 32px 32px;
+}
+
+.network-placeholder {
+  display: flex;
+  max-width: 34rem;
+  align-items: center;
+  gap: 0.8rem;
+  padding: 2rem;
+  color: var(--muted);
+  text-align: center;
+}
+
+.network-placeholder p {
+  margin: 0;
+}
+
+.network-placeholder-success {
+  color: #cce9e1;
+}
+
+.loading-indicator {
+  width: 1rem;
+  height: 1rem;
+  flex: 0 0 auto;
+  border: 2px solid rgba(100, 224, 187, 0.25);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+.network-summary {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  margin: 0;
+  border-top: 1px solid var(--surface-border);
+}
+
+.network-summary div {
+  padding: 1.15rem 1.5rem;
+}
+
+.network-summary div + div {
+  border-left: 1px solid var(--surface-border);
+}
+
+.network-summary dt {
+  margin-bottom: 0.25rem;
+  color: var(--muted);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.network-summary dd {
+  margin: 0;
+  color: #f7fffd;
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (max-width: 640px) {
+  .page-shell {
+    width: min(100% - 1rem, 1120px);
+    padding: 2rem 0;
+  }
+
+  .workspace-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .network-canvas {
+    min-height: 330px;
+  }
+
+  .network-summary {
+    grid-template-columns: 1fr;
+  }
+
+  .network-summary div + div {
+    border-top: 1px solid var(--surface-border);
+    border-left: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .loading-indicator {
+    animation: none;
+  }
+}
