@@ -1,15 +1,23 @@
 const elements = {
   status: document.querySelector("#api-status"),
   error: document.querySelector("#api-error"),
+  actionError: document.querySelector("#action-error"),
   network: document.querySelector("#network"),
   nodeCount: document.querySelector("#node-count"),
   edgeCount: document.querySelector("#edge-count"),
   libraryStatus: document.querySelector("#library-status"),
   routeDescription: document.querySelector("#route-description"),
   routeDetails: document.querySelector("#route-details"),
+  originSelect: document.querySelector("#origin-select"),
+  destinationSelect: document.querySelector("#destination-select"),
+  algoDijkstra: document.querySelector("#algo-dijkstra"),
+  algoBellmanFord: document.querySelector("#algo-bellman-ford"),
+  resetButton: document.querySelector("#reset-button"),
 };
 
 const PROJECTION_SCALE = 6;
+const ROUTE_FLASH_COLOR = "#fff3b0";
+const ROUTE_FLASH_DURATION_MS = 500;
 const COLORS = {
   node: "#49bfa1",
   nodeBorder: "#b5f4e3",
@@ -27,6 +35,15 @@ const COLORS = {
 
 let visualization;
 let resizeObserver;
+let nodesDataSet;
+let edgesDataSet;
+let currentGraph;
+
+const currentSelection = {
+  origem: null,
+  destino: null,
+  algoritmo: "dijkstra",
+};
 
 function edgeKey(first, second) {
   return [first, second].sort().join("::");
@@ -128,11 +145,11 @@ function toVisEdges(graph) {
 
 function renderRouteSummary(graph) {
   const route = graph.rota_atual;
+  elements.routeDetails.classList.remove("route-details-warning");
 
   if (!route) {
-    elements.routeDescription.textContent = "Nenhuma rota foi calculada ainda.";
-    elements.routeDetails.innerHTML =
-      'Use o endpoint <code>POST /rota</code> e recarregue esta página.';
+    elements.routeDescription.textContent = "Nenhuma rota selecionada.";
+    elements.routeDetails.textContent = "Selecione origem e destino para calcular uma rota.";
     return;
   }
 
@@ -142,7 +159,8 @@ function renderRouteSummary(graph) {
   elements.routeDescription.textContent = `${origin} → ${destination}`;
 
   if (!route.encontrada) {
-    elements.routeDetails.textContent = "Não existe caminho disponível entre esses pontos.";
+    elements.routeDetails.textContent = `Rede particionada: não há caminho disponível entre ${origin} e ${destination} no momento.`;
+    elements.routeDetails.classList.add("route-details-warning");
     return;
   }
 
@@ -154,7 +172,7 @@ function renderRouteSummary(graph) {
   }`;
 }
 
-function renderNetwork(graph) {
+function buildNetwork(graph) {
   if (!window.vis?.Network || !window.vis?.DataSet) {
     throw new Error("A biblioteca de visualização não pôde ser carregada.");
   }
@@ -162,10 +180,9 @@ function renderNetwork(graph) {
   visualization?.destroy();
   resizeObserver?.disconnect();
 
-  const data = {
-    nodes: new window.vis.DataSet(toVisNodes(graph)),
-    edges: new window.vis.DataSet(toVisEdges(graph)),
-  };
+  nodesDataSet = new window.vis.DataSet(toVisNodes(graph));
+  edgesDataSet = new window.vis.DataSet(toVisEdges(graph));
+  const data = { nodes: nodesDataSet, edges: edgesDataSet };
   const options = {
     autoResize: true,
     physics: false,
@@ -186,6 +203,7 @@ function renderNetwork(graph) {
 
   visualization = new window.vis.Network(elements.network, data, options);
   visualization.fit({ animation: false });
+  visualization.on("click", handleNetworkClick);
 
   if (window.ResizeObserver) {
     resizeObserver = new ResizeObserver(() => visualization?.fit({ animation: false }));
@@ -193,8 +211,202 @@ function renderNetwork(graph) {
   }
 }
 
+function updateNetwork(graph) {
+  nodesDataSet.update(toVisNodes(graph));
+  edgesDataSet.update(toVisEdges(graph));
+}
+
+function flashRouteEdges(edgeIds) {
+  if (!edgeIds.length) {
+    return;
+  }
+  edgesDataSet.update(
+    edgeIds.map((id) => ({
+      id,
+      width: 6,
+      color: { color: ROUTE_FLASH_COLOR, highlight: ROUTE_FLASH_COLOR, hover: ROUTE_FLASH_COLOR },
+    })),
+  );
+  window.setTimeout(() => updateNetwork(currentGraph), ROUTE_FLASH_DURATION_MS);
+}
+
+async function handleNetworkClick(params) {
+  if (!params.nodes.length) {
+    return;
+  }
+  await toggleNode(params.nodes[0]);
+}
+
+async function toggleNode(nodeId) {
+  const node = currentGraph.nos.find((candidate) => candidate.id === nodeId);
+  if (!node) {
+    return;
+  }
+  const action = node.ativo ? "derrubar" : "restaurar";
+
+  try {
+    clearActionError();
+    const response = await fetch(`/nos/${encodeURIComponent(nodeId)}/${action}`, {
+      method: "POST",
+    });
+    if (!response.ok) {
+      throw new Error(`A API respondeu com HTTP ${response.status}.`);
+    }
+    currentGraph = await fetchGraph();
+    await recalculateAndRender();
+  } catch (error) {
+    showActionError(error);
+  }
+}
+
+async function refreshRoute() {
+  const previousRouteEdges = currentRouteEdges(currentGraph.rota_atual);
+
+  if (!currentSelection.origem || !currentSelection.destino) {
+    currentGraph.rota_atual = null;
+    return previousRouteEdges;
+  }
+
+  const response = await fetch("/rota", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      origem: currentSelection.origem,
+      destino: currentSelection.destino,
+      algoritmo: currentSelection.algoritmo,
+    }),
+  });
+  if (!response.ok) {
+    throw new Error(`A API respondeu com HTTP ${response.status}.`);
+  }
+  const rota = await response.json();
+  currentGraph.rota_atual = {
+    origem: currentSelection.origem,
+    destino: currentSelection.destino,
+    ...rota,
+  };
+  return previousRouteEdges;
+}
+
+async function recalculateAndRender() {
+  const previousRouteEdges = await refreshRoute();
+  updateNetwork(currentGraph);
+  renderRouteSummary(currentGraph);
+
+  const newRouteEdges = [...currentRouteEdges(currentGraph.rota_atual)].filter(
+    (edgeId) => !previousRouteEdges.has(edgeId),
+  );
+  flashRouteEdges(newRouteEdges);
+}
+
+function populateEndpointSelects(graph) {
+  const options = graph.nos
+    .slice()
+    .sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR"))
+    .map((node) => `<option value="${node.id}">${node.nome}</option>`)
+    .join("");
+
+  elements.originSelect.innerHTML = `<option value="">Selecione…</option>${options}`;
+  elements.destinationSelect.innerHTML = `<option value="">Selecione…</option>${options}`;
+  elements.originSelect.value = currentSelection.origem ?? "";
+  elements.destinationSelect.value = currentSelection.destino ?? "";
+}
+
+function setAlgorithm(algoritmo) {
+  currentSelection.algoritmo = algoritmo;
+  elements.algoDijkstra.setAttribute("aria-pressed", String(algoritmo === "dijkstra"));
+  elements.algoBellmanFord.setAttribute("aria-pressed", String(algoritmo === "bellman_ford"));
+}
+
+async function resetSimulation() {
+  try {
+    clearActionError();
+    const downNodes = currentGraph.nos.filter((node) => !node.ativo);
+    const downEdges = currentGraph.arestas.filter((edge) => !edge.ativo);
+    await Promise.all([
+      ...downNodes.map((node) =>
+        fetch(`/nos/${encodeURIComponent(node.id)}/restaurar`, { method: "POST" }),
+      ),
+      ...downEdges.map((edge) =>
+        fetch("/arestas/restaurar", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ origem: edge.origem, destino: edge.destino }),
+        }),
+      ),
+    ]);
+    currentGraph = await fetchGraph();
+    await recalculateAndRender();
+  } catch (error) {
+    showActionError(error);
+  }
+}
+
+function bindControls() {
+  elements.originSelect.addEventListener("change", async (event) => {
+    currentSelection.origem = event.target.value || null;
+    try {
+      clearActionError();
+      await recalculateAndRender();
+    } catch (error) {
+      showActionError(error);
+    }
+  });
+
+  elements.destinationSelect.addEventListener("change", async (event) => {
+    currentSelection.destino = event.target.value || null;
+    try {
+      clearActionError();
+      await recalculateAndRender();
+    } catch (error) {
+      showActionError(error);
+    }
+  });
+
+  elements.algoDijkstra.addEventListener("click", async () => {
+    setAlgorithm("dijkstra");
+    try {
+      clearActionError();
+      await recalculateAndRender();
+    } catch (error) {
+      showActionError(error);
+    }
+  });
+
+  elements.algoBellmanFord.addEventListener("click", async () => {
+    setAlgorithm("bellman_ford");
+    try {
+      clearActionError();
+      await recalculateAndRender();
+    } catch (error) {
+      showActionError(error);
+    }
+  });
+
+  elements.resetButton.addEventListener("click", resetSimulation);
+}
+
+function clearActionError() {
+  elements.actionError.hidden = true;
+  elements.actionError.textContent = "";
+}
+
+function showActionError(error) {
+  console.error("Falha ao aplicar mudança na simulação:", error);
+  elements.actionError.textContent = `Não foi possível aplicar a mudança. ${error.message}`;
+  elements.actionError.hidden = false;
+}
+
 function showGraph(graph) {
-  renderNetwork(graph);
+  currentGraph = graph;
+  currentSelection.origem = graph.rota_atual?.origem ?? currentSelection.origem;
+  currentSelection.destino = graph.rota_atual?.destino ?? currentSelection.destino;
+  currentSelection.algoritmo = graph.rota_atual?.algoritmo ?? currentSelection.algoritmo;
+
+  buildNetwork(graph);
+  populateEndpointSelects(graph);
+  setAlgorithm(currentSelection.algoritmo);
+  bindControls();
   renderRouteSummary(graph);
   elements.nodeCount.textContent = graph.nos.length;
   elements.edgeCount.textContent = graph.arestas.length;

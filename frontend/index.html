@@ -41,6 +41,37 @@
         </div>
 
         <div id="api-error" class="error-message" role="alert" hidden></div>
+        <div id="action-error" class="error-message" role="alert" hidden></div>
+
+        <section class="controls" aria-label="Controles da simulação">
+          <div class="control-group">
+            <label for="origin-select">Origem</label>
+            <select id="origin-select"></select>
+          </div>
+          <div class="control-group">
+            <label for="destination-select">Destino</label>
+            <select id="destination-select"></select>
+          </div>
+          <div class="control-group algorithm-toggle" role="group" aria-label="Algoritmo de roteamento">
+            <span class="control-label">Algoritmo</span>
+            <div class="algo-buttons">
+              <button type="button" id="algo-dijkstra" class="algo-button" aria-pressed="true">
+                Dijkstra
+              </button>
+              <button
+                type="button"
+                id="algo-bellman-ford"
+                class="algo-button"
+                aria-pressed="false"
+              >
+                Bellman-Ford
+              </button>
+            </div>
+          </div>
+          <button type="button" id="reset-button" class="reset-button">
+            Resetar simulação
+          </button>
+        </section>
 
         <section class="route-summary" aria-labelledby="route-title" aria-live="polite">
           <p id="route-title" class="route-label">Rota atual</p>
@@ -48,9 +79,11 @@
             Nenhuma rota foi calculada ainda.
           </p>
           <p id="route-details" class="route-details">
-            Use o endpoint <code>POST /rota</code> e recarregue esta página.
+            Selecione origem e destino para calcular uma rota.
           </p>
         </section>
+
+        <p class="network-hint">Clique em um nó para derrubá-lo ou restaurá-lo.</p>
 
         <div id="network" class="network-canvas" aria-busy="true">
           <div class="network-placeholder">

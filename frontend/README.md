@@ -45,7 +45,13 @@ física da biblioteca fica desativada para preservar a posição geográfica.
 
 As conexões mostram o nome do cabo, a distância e o estado em um tooltip. A
 última rota calculada por `POST /rota` é retornada junto de `GET /grafo` e aparece
-destacada depois que a página é recarregada.
+destacada assim que a página carrega.
 
-As interações para derrubar e restaurar nós e cabos serão implementadas
-separadamente na issue `#11`.
+## Interação em tempo real
+
+Clicar em um nó ativo o derruba (`POST /nos/{id}/derrubar`); clicar de novo o
+restaura (`POST /nos/{id}/restaurar`). A cada mudança, se já houver uma rota
+selecionada, ela é recalculada automaticamente (`POST /rota`) e o novo caminho
+é destacado no grafo, sem recarregar a página. Se a mudança isolar origem e
+destino, a rede particionada aparece como mensagem de aviso no lugar do
+caminho.
