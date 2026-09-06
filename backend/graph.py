@@ -158,6 +158,25 @@ class Network:
                     )
         return tuple(result)
 
+    def clone(self) -> "Network":
+        """Cria uma copia independente da topologia e do estado das falhas."""
+        copy = Network()
+        for node in self.nodes():
+            copy.add_node(node.id, name=node.name, lat=node.lat, lon=node.lon)
+            if not node.is_up:
+                copy.set_node_down(node.id)
+        for origin, edge in self.edges():
+            copy.add_edge(
+                origin,
+                edge.destination,
+                edge.weight,
+                cable=edge.cable,
+                source_ids=edge.source_ids,
+            )
+            if not edge.is_up:
+                copy.set_edge_down(origin, edge.destination)
+        return copy
+
     def _set_edge_status(self, origin: str, destination: str, *, is_up: bool) -> None:
         forward, reverse = self._require_edge_pair(origin, destination)
         forward.is_up = is_up

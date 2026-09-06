@@ -39,7 +39,14 @@ from backend.simulation import (
     restaurar_aresta,
     restaurar_no,
 )
-from backend.state import get_network, network_lifespan
+from backend.state import (
+    SESSION_COOKIE,
+    SESSION_TTL_SECONDS,
+    get_network,
+    get_route,
+    network_lifespan,
+    set_route,
+)
 
 # O contrato HTTP usa `bellman_ford` (identificador valido em qualquer
 # linguagem cliente) e o dominio usa `bellman-ford`; o mapa isola a traducao.
@@ -55,6 +62,25 @@ app = FastAPI(
     version="0.1.0",
     lifespan=network_lifespan,
 )
+
+
+@app.middleware("http")
+async def persist_session(request: Request, call_next):
+    response = await call_next(request)
+    network = getattr(request.state, "session_network", None)
+    session_id = getattr(request.state, "session_id", None)
+    if network is not None and session_id is not None:
+        request.app.state.sessions.save(session_id, network)
+        if getattr(request.state, "new_session", False):
+            response.set_cookie(
+                SESSION_COOKIE,
+                session_id,
+                max_age=SESSION_TTL_SECONDS,
+                httponly=True,
+                samesite="lax",
+            )
+    return response
+
 
 # Em desenvolvimento o front-end e servido de uma porta arbitraria de localhost.
 app.add_middleware(
@@ -104,7 +130,7 @@ def obter_grafo(request: Request, network: NetworkDep) -> GrafoState:
             )
             for origem, edge in network.edges()
         ],
-        rota_atual=getattr(request.app.state, "rota_atual", None),
+        rota_atual=get_route(request),
     )
 
 
@@ -160,10 +186,13 @@ def calcular_rota(pedido: RotaRequest, request: Request, network: NetworkDep) ->
             network, pedido.origem, pedido.destino, _ALGORITMOS[pedido.algoritmo]
         )
     resposta = RotaResult.from_domain(resultado, pedido.algoritmo)
-    request.app.state.rota_atual = RotaAtual(
-        origem=pedido.origem,
-        destino=pedido.destino,
-        **resposta.model_dump(),
+    set_route(
+        request,
+        RotaAtual(
+            origem=pedido.origem,
+            destino=pedido.destino,
+            **resposta.model_dump(),
+        ),
     )
     return resposta
 
@@ -225,7 +254,7 @@ def restaurar_aresta_endpoint(
 
 def _invalidar_rota(request: Request) -> None:
     """Remove o destaque quando uma mudanca torna a rota armazenada obsoleta."""
-    request.app.state.rota_atual = None
+    set_route(request, None)
 
 
 def _aresta_state(network: Network, origem: str, destino: str) -> ArestaState:

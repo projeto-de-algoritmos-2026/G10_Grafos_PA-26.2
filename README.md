@@ -59,7 +59,12 @@ Verificações úteis:
 - <http://localhost:8000/status> deve responder `{"status":"ok"}`;
 - <http://localhost:8000/docs> abre o Swagger com o contrato da API.
 
-O estado da simulação fica somente em memória. Reiniciar o processo restaura a rede.
+Cada navegador recebe uma sessão HTTP isolada por cookie `HttpOnly`: quedas de nós,
+quedas de cabos e a rota destacada não são compartilhadas com outros clientes. As
+sessões expiram após 30 minutos sem atividade e há um limite de 100 sessões mantidas
+em memória; uma sessão expirada recomeça com a malha íntegra. A topologia base é
+carregada uma única vez e permanece imutável durante a execução. Reiniciar o processo
+descarta todas as sessões e restaura a rede.
 
 ## Estrutura do repositório
 
