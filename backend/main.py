@@ -9,12 +9,14 @@ from fastapi import Depends, FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
-from backend.algorithms import find_critical_points, k_shortest_paths
+from backend.algorithms import find_critical_points, k_shortest_paths, minimum_edge_cut
 from backend.graph import Network
 from backend.schemas import (
     AlgoritmoNome,
     ArestaRequest,
     ArestaState,
+    CorteMinimoRequest,
+    CorteMinimoResult,
     CriticidadeResult,
     GrafoState,
     NoState,
@@ -112,6 +114,19 @@ def obter_criticidade(network: NetworkDep) -> CriticidadeResult:
             PonteState(origem=origem, destino=destino) for origem, destino in resultado.bridges
         ],
         componentes=resultado.components,
+    )
+
+
+@app.post("/analise/corte-minimo")
+def calcular_corte_minimo(pedido: CorteMinimoRequest, network: NetworkDep) -> CorteMinimoResult:
+    """Calcula quantos cabos ativos separam dois roteadores pelo teorema de Menger."""
+    with _traduz_erros():
+        resultado = minimum_edge_cut(network, pedido.origem, pedido.destino)
+    return CorteMinimoResult(
+        capacidade=resultado.capacity,
+        arestas=[
+            ArestaRequest(origem=origem, destino=destino) for origem, destino in resultado.edges
+        ],
     )
 
 

@@ -10,10 +10,12 @@ const elements = {
   routeDetails: document.querySelector("#route-details"),
   routeRedundancy: document.querySelector("#route-redundancy"),
   criticalityDetails: document.querySelector("#criticality-details"),
+  minCutDetails: document.querySelector("#min-cut-details"),
   originSelect: document.querySelector("#origin-select"),
   destinationSelect: document.querySelector("#destination-select"),
   algoDijkstra: document.querySelector("#algo-dijkstra"),
   algoBellmanFord: document.querySelector("#algo-bellman-ford"),
+  minCutButton: document.querySelector("#min-cut-button"),
   resetButton: document.querySelector("#reset-button"),
 };
 
@@ -40,6 +42,7 @@ const COLORS = {
   alternateRoute: "rgba(224, 192, 122, 0.4)",
   articulation: "#d2a24c",
   bridge: "#d2a24c",
+  minCut: "#dc626c",
   landFill: "rgba(111, 185, 138, 0.09)",
   landStroke: "rgba(125, 175, 145, 0.42)",
 };
@@ -53,6 +56,8 @@ let flashedEdgeIds = new Set();
 // Rotas 2..k devolvidas por /rotas (a melhor fica de fora, ja coberta por rota_atual).
 let currentAlternateRoutes = [];
 let currentRedundancyPercent = null;
+let currentMinCut = null;
+let currentMinCutEdgeIds = new Set();
 
 const currentSelection = {
   origem: null,
@@ -217,6 +222,7 @@ function toGlobeArcs(graph) {
       const belongsToRoute = routeEdges.has(id);
       const isBridge = bridgeEdges.has(id);
       const isFlashed = flashedEdgeIds.has(id);
+      const isMinCut = currentMinCutEdgeIds.has(id);
       const alternate = belongsToRoute ? undefined : alternateEdges.get(id);
 
       let color = edge.ativo ? COLORS.edge : COLORS.edgeDown;
@@ -232,13 +238,19 @@ function toGlobeArcs(graph) {
       if (isFlashed) {
         color = ROUTE_FLASH_COLOR;
       }
+      if (isMinCut) {
+        color = COLORS.minCut;
+      }
 
       // Tracos curtos: um padrao longo deixaria so dois segmentos por arco, que
       // a distancia parecem riscos soltos em vez de um cabo pontilhado.
       let dashLength = 1;
       let dashGap = 0;
       let dashAnimateTime = 0;
-      if (belongsToRoute || isFlashed) {
+      if (isMinCut) {
+        dashLength = 1;
+        dashGap = 0;
+      } else if (belongsToRoute || isFlashed) {
         dashLength = 0.3;
         dashGap = 0.12;
         dashAnimateTime = 1600;
@@ -260,11 +272,20 @@ function toGlobeArcs(graph) {
         peso: edge.peso,
         ativo: edge.ativo,
         isBridge,
+        isMinCut,
         alternateRank: alternate?.rank,
         alternateCusto: alternate?.custo,
         color,
         // Rota alternativa fica visivelmente mais fina e apagada, atras da rota otima.
-        stroke: belongsToRoute || isFlashed ? 0.55 : alternate ? 0.16 : isBridge ? 0.38 : 0.25,
+        stroke: isMinCut
+          ? 0.7
+          : belongsToRoute || isFlashed
+            ? 0.55
+            : alternate
+              ? 0.16
+              : isBridge
+                ? 0.38
+                : 0.25,
         dashLength,
         dashGap,
         dashAnimateTime,
@@ -287,7 +308,9 @@ function arcLabel(arc) {
     : "";
   return `${arc.cabo}<br>${Math.round(arc.peso).toLocaleString("pt-BR")} km<br>${
     arc.ativo ? "Ativa" : "Derrubada"
-  }${arc.isBridge ? "<br>Ponte (ponto único de falha)" : ""}${alternateInfo}`;
+  }${arc.isBridge ? "<br>Ponte (ponto único de falha)" : ""}${
+    arc.isMinCut ? "<br>Parte do corte mínimo calculado" : ""
+  }${alternateInfo}`;
 }
 
 function renderRouteSummary(graph) {
@@ -444,6 +467,7 @@ async function toggleNode(nodeId) {
     if (!response.ok) {
       throw new Error(`A API respondeu com HTTP ${response.status}.`);
     }
+    clearMinimumCut();
     currentGraph = await fetchGraph();
     currentCriticidade = await fetchCriticidade();
     await recalculateAndRender();
@@ -536,6 +560,63 @@ function renderCriticalitySummary() {
   elements.criticalityDetails.textContent = `${parts.join(" e ")} ${verb} ponto único de falha.`;
 }
 
+function updateMinCutButton() {
+  elements.minCutButton.disabled =
+    !currentSelection.origem ||
+    !currentSelection.destino ||
+    currentSelection.origem === currentSelection.destino;
+}
+
+function clearMinimumCut() {
+  currentMinCut = null;
+  currentMinCutEdgeIds = new Set();
+  elements.minCutDetails.textContent =
+    "Selecione dois roteadores e calcule quantos cabos os separam.";
+}
+
+function renderMinimumCut() {
+  if (!currentMinCut) {
+    return;
+  }
+  const count = currentMinCut.capacidade;
+  if (count === 0) {
+    elements.minCutDetails.textContent =
+      "0 cabos: os roteadores já estão desconectados na rede disponível.";
+    return;
+  }
+  elements.minCutDetails.textContent = `${count} ${
+    count === 1 ? "cabo precisa" : "cabos precisam"
+  } cair para separar os roteadores selecionados.`;
+}
+
+async function calculateMinimumCut() {
+  if (elements.minCutButton.disabled) {
+    return;
+  }
+  try {
+    clearActionError();
+    const response = await fetch("/analise/corte-minimo", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        origem: currentSelection.origem,
+        destino: currentSelection.destino,
+      }),
+    });
+    if (!response.ok) {
+      throw new Error(`A API respondeu com HTTP ${response.status}.`);
+    }
+    currentMinCut = await response.json();
+    currentMinCutEdgeIds = new Set(
+      currentMinCut.arestas.map((edge) => edgeKey(edge.origem, edge.destino)),
+    );
+    renderMinimumCut();
+    updateGlobe(currentGraph);
+  } catch (error) {
+    showActionError(error);
+  }
+}
+
 function populateEndpointSelects(graph) {
   const options = graph.nos
     .slice()
@@ -558,6 +639,7 @@ function setAlgorithm(algoritmo) {
 async function resetSimulation() {
   try {
     clearActionError();
+    clearMinimumCut();
     const downNodes = currentGraph.nos.filter((node) => !node.ativo);
     const downEdges = currentGraph.arestas.filter((edge) => !edge.ativo);
     await Promise.all([
@@ -583,6 +665,8 @@ async function resetSimulation() {
 function bindControls() {
   elements.originSelect.addEventListener("change", async (event) => {
     currentSelection.origem = event.target.value || null;
+    clearMinimumCut();
+    updateMinCutButton();
     try {
       clearActionError();
       await recalculateAndRender();
@@ -593,6 +677,8 @@ function bindControls() {
 
   elements.destinationSelect.addEventListener("change", async (event) => {
     currentSelection.destino = event.target.value || null;
+    clearMinimumCut();
+    updateMinCutButton();
     try {
       clearActionError();
       await recalculateAndRender();
@@ -621,6 +707,7 @@ function bindControls() {
     }
   });
 
+  elements.minCutButton.addEventListener("click", calculateMinimumCut);
   elements.resetButton.addEventListener("click", resetSimulation);
 }
 
@@ -644,6 +731,7 @@ function showGraph(graph) {
   buildGlobe(graph);
   populateEndpointSelects(graph);
   setAlgorithm(currentSelection.algoritmo);
+  updateMinCutButton();
   bindControls();
   renderRouteSummary(graph);
   renderCriticalitySummary();
