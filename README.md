@@ -5,7 +5,7 @@ cabos como um grafo ponderado e recalcula a menor rota quando um nó ou uma cone
 fica indisponível. A aplicação permite comparar Dijkstra, Bellman-Ford e A* e
 acompanhar o resultado em uma interface web interativa.
 
-![Interface com uma rota recalculada após a queda de um nó](docs/images/rota-recalculada.png)
+![Interface geográfica com a rota entre Praia Grande e Sines](docs/images/mapa-rota.png)
 
 ## Funcionalidades
 
@@ -24,7 +24,8 @@ acompanhar o resultado em uma interface web interativa.
 - [Git](https://git-scm.com/);
 - Python 3.12 ou superior;
 - [uv](https://docs.astral.sh/uv/getting-started/installation/);
-- acesso à internet no navegador para carregar o `Globe.gl` 2.27.1 pela CDN.
+- acesso à internet no navegador é opcional: carrega o mapa-base do OpenStreetMap;
+  sem ele, a topologia permanece interativa sobre um fundo neutro.
 
 Não é necessário instalar Node.js nem executar um servidor separado para o
 front-end.
