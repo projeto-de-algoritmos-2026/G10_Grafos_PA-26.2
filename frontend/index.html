@@ -8,28 +8,36 @@
       content="Simulador visual de rotas e falhas em uma rede mundial de internet."
     />
     <title>Simulador de Colapso de Internet</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
       rel="stylesheet"
-      href="https://unpkg.com/vis-network@9.1.9/styles/vis-network.min.css"
+      href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700;800&display=swap"
     />
     <link rel="stylesheet" href="/style.css" />
-    <script
-      defer
-      src="https://unpkg.com/vis-network@9.1.9/standalone/umd/vis-network.min.js"
-    ></script>
+    <script defer src="https://unpkg.com/globe.gl@2.27.1/dist/globe.gl.min.js"></script>
     <script defer src="/app.js"></script>
   </head>
   <body>
+    <div class="scanlines" aria-hidden="true"></div>
     <main class="page-shell">
       <header class="hero">
-        <p class="eyebrow">Projeto de Algoritmos · Grafos</p>
-        <h1>Simulador de Colapso de Internet</h1>
+        <p class="eyebrow">&gt; projeto_de_algoritmos --modulo grafos</p>
+        <h1>Simulador de Colapso<span class="cursor-blink">_</span><br />de Internet</h1>
         <p class="hero-description">
-          Explore como falhas em roteadores e cabos alteram as rotas de uma rede mundial.
+          Explore como falhas em roteadores e cabos alteram as rotas de uma rede mundial em um
+          globo 3D interativo.
         </p>
       </header>
 
       <section class="workspace" aria-labelledby="network-title">
+        <div class="terminal-bar" aria-hidden="true">
+          <span class="terminal-dot"></span>
+          <span class="terminal-dot"></span>
+          <span class="terminal-dot"></span>
+          <span class="terminal-path">root@simulador-colapso:~$ tail -f /var/log/rede.state</span>
+        </div>
+
         <div class="workspace-heading">
           <div>
             <p class="section-label">Topologia mundial</p>
@@ -45,15 +53,15 @@
 
         <section class="controls" aria-label="Controles da simulação">
           <div class="control-group">
-            <label for="origin-select">Origem</label>
+            <label for="origin-select">[ Origem ]</label>
             <select id="origin-select"></select>
           </div>
           <div class="control-group">
-            <label for="destination-select">Destino</label>
+            <label for="destination-select">[ Destino ]</label>
             <select id="destination-select"></select>
           </div>
           <div class="control-group algorithm-toggle" role="group" aria-label="Algoritmo de roteamento">
-            <span class="control-label">Algoritmo</span>
+            <span class="control-label">[ Algoritmo ]</span>
             <div class="algo-buttons">
               <button type="button" id="algo-dijkstra" class="algo-button" aria-pressed="true">
                 Dijkstra
@@ -69,7 +77,7 @@
             </div>
           </div>
           <button type="button" id="reset-button" class="reset-button">
-            Resetar simulação
+            &gt; reset --force
           </button>
         </section>
 
@@ -92,7 +100,10 @@
           <p id="criticality-details" class="route-details">Analisando a rede…</p>
         </section>
 
-        <p class="network-hint">Clique em um nó para derrubá-lo ou restaurá-lo.</p>
+        <p class="network-hint">
+          Clique em um nó para derrubá-lo ou restaurá-lo · arraste para girar o globo · role para
+          dar zoom.
+        </p>
 
         <div id="network" class="network-canvas" aria-busy="true">
           <div class="network-placeholder">
