@@ -6,6 +6,18 @@ from typing import Self
 
 
 @dataclass(frozen=True, slots=True)
+class TraceEvent:
+    """Evento serializavel emitido opcionalmente durante uma busca."""
+
+    tipo: str
+    no: str | None = None
+    origem: str | None = None
+    destino: str | None = None
+    custo: float | None = None
+    rodada: int | None = None
+
+
+@dataclass(frozen=True, slots=True)
 class RouteResult:
     """Resultado de uma busca de caminho minimo na rede.
 

@@ -15,6 +15,8 @@ acompanhar o resultado em uma interface web interativa.
 - queda e restauração de nós por clique;
 - recálculo e destaque da rota sem recarregar a página;
 - indicação de rede particionada quando não existe caminho disponível;
+- execução passo a passo dos algoritmos com reprodução, pausa, velocidade e respeito
+  a `prefers-reduced-motion`;
 - API HTTP documentada automaticamente pelo FastAPI.
 
 ## Pré-requisitos
@@ -58,6 +60,11 @@ Verificações úteis:
 
 - <http://localhost:8000/status> deve responder `{"status":"ok"}`;
 - <http://localhost:8000/docs> abre o Swagger com o contrato da API.
+
+Além da rota normal, `POST /rota/passos` devolve o resultado e um traço limitado de
+eventos da execução. Para operações de cenário, `POST /simulacao/falhas` aplica um lote
+validado atomicamente e `POST /simulacao/resetar` restaura a sessão inteira e devolve o
+`GrafoState` atualizado em uma única resposta.
 
 Cada navegador recebe uma sessão HTTP isolada por cookie `HttpOnly`: quedas de nós,
 quedas de cabos e a rota destacada não são compartilhadas com outros clientes. As

@@ -2,7 +2,7 @@
 
 import math
 
-from backend.algorithms.result import RouteResult
+from backend.algorithms.result import RouteResult, TraceEvent
 from backend.graph import Network
 
 type Arc = tuple[str, str, float]
@@ -12,7 +12,14 @@ class NegativeCycleError(ValueError):
     """Sinaliza um ciclo de custo negativo alcancavel a partir da origem."""
 
 
-def bellman_ford(network: Network, origin: str, destination: str) -> RouteResult:
+def bellman_ford(
+    network: Network,
+    origin: str,
+    destination: str,
+    *,
+    trace: list[TraceEvent] | None = None,
+    max_trace_events: int = 5000,
+) -> RouteResult:
     """Calcula o caminho de menor custo relaxando todas as arestas a cada rodada.
 
     Um caminho minimo tem no maximo V-1 arestas, entao V-1 rodadas de relaxamento
@@ -49,11 +56,14 @@ def bellman_ford(network: Network, origin: str, destination: str) -> RouteResult
     nodes_expanded = 0
     edges_relaxed = 0
 
-    for _ in range(len(distances) - 1):
-        changed, round_nodes, round_edges = _relax_all(arcs, distances, predecessors)
+    for round_number in range(1, len(distances)):
+        changed, round_nodes, round_edges = _relax_all(
+            arcs, distances, predecessors, trace, round_number, max_trace_events
+        )
         nodes_expanded += round_nodes
         edges_relaxed += round_edges
         if not changed:
+            _trace(trace, TraceEvent("finaliza", rodada=round_number), max_trace_events)
             break
     else:
         if _has_relaxable_arc(arcs, distances):
@@ -88,6 +98,9 @@ def _relax_all(
     arcs: tuple[Arc, ...],
     distances: dict[str, float],
     predecessors: dict[str, str],
+    trace: list[TraceEvent] | None = None,
+    round_number: int = 0,
+    max_trace_events: int = 5000,
 ) -> tuple[bool, int, int]:
     """Executa uma rodada de relaxamento.
 
@@ -103,11 +116,28 @@ def _relax_all(
         touched_origins.add(origin)
         edges_relaxed += 1
         new_cost = distances[origin] + weight
+        event_type = "relaxa" if new_cost < distances[destination] else "descarta"
+        _trace(
+            trace,
+            TraceEvent(
+                event_type,
+                origem=origin,
+                destino=destination,
+                custo=new_cost,
+                rodada=round_number,
+            ),
+            max_trace_events,
+        )
         if new_cost < distances[destination]:
             distances[destination] = new_cost
             predecessors[destination] = origin
             changed = True
     return changed, len(touched_origins), edges_relaxed
+
+
+def _trace(trace: list[TraceEvent] | None, event: TraceEvent, limit: int) -> None:
+    if trace is not None and len(trace) < limit:
+        trace.append(event)
 
 
 def _has_relaxable_arc(arcs: tuple[Arc, ...], distances: dict[str, float]) -> bool:

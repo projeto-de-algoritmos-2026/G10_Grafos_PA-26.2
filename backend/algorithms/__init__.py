@@ -6,13 +6,14 @@ from backend.algorithms.connectivity import CriticalityResult, find_critical_poi
 from backend.algorithms.dijkstra import dijkstra
 from backend.algorithms.k_shortest import k_shortest_paths
 from backend.algorithms.max_flow import MinCutResult, minimum_edge_cut
-from backend.algorithms.result import RouteResult
+from backend.algorithms.result import RouteResult, TraceEvent
 
 __all__ = [
     "CriticalityResult",
     "NegativeCycleError",
     "MinCutResult",
     "RouteResult",
+    "TraceEvent",
     "a_star",
     "bellman_ford",
     "dijkstra",

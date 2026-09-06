@@ -4,12 +4,19 @@ import heapq
 import math
 
 from backend.algorithms._shared import require_non_negative_active_edges
-from backend.algorithms.result import RouteResult
+from backend.algorithms.result import RouteResult, TraceEvent
 from backend.dataset import haversine_km
 from backend.graph import Network
 
 
-def a_star(network: Network, origin: str, destination: str) -> RouteResult:
+def a_star(
+    network: Network,
+    origin: str,
+    destination: str,
+    *,
+    trace: list[TraceEvent] | None = None,
+    max_trace_events: int = 5000,
+) -> RouteResult:
     """Calcula o caminho de menor custo guiado pela distancia geodesica ate o destino.
 
     A heuristica ``h(n) = haversine(n, destino)`` e admissivel e consistente: o
@@ -65,7 +72,11 @@ def a_star(network: Network, origin: str, destination: str) -> RouteResult:
     while queue:
         current_f, current = heapq.heappop(queue)
         if current_f > f_score[current]:
+            if trace is not None and len(trace) < max_trace_events:
+                trace.append(TraceEvent("descarta", no=current, custo=current_f))
             continue
+        if trace is not None and len(trace) < max_trace_events:
+            trace.append(TraceEvent("visita", no=current, custo=g_score[current]))
         nodes_expanded += 1
         if current == destination:
             return RouteResult.from_predecessors(
@@ -80,6 +91,15 @@ def a_star(network: Network, origin: str, destination: str) -> RouteResult:
         for edge in network.neighbors(current):
             edges_relaxed += 1
             tentative_g = g_score[current] + edge.weight
+            if trace is not None and len(trace) < max_trace_events:
+                trace.append(
+                    TraceEvent(
+                        "relaxa" if tentative_g < g_score[edge.destination] else "descarta",
+                        origem=current,
+                        destino=edge.destination,
+                        custo=tentative_g,
+                    )
+                )
             if tentative_g < g_score[edge.destination]:
                 g_score[edge.destination] = tentative_g
                 predecessors[edge.destination] = current
