@@ -9,7 +9,7 @@ from fastapi import Depends, FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
-from backend.algorithms import find_critical_points, k_shortest_paths
+from backend.algorithms import find_critical_points, k_shortest_paths, minimum_edge_cut
 from backend.graph import Network
 from backend.resilience import simulate_cascade
 from backend.schemas import (
@@ -18,6 +18,8 @@ from backend.schemas import (
     ArestaState,
     CascataRequest,
     CascataResult,
+    CorteMinimoRequest,
+    CorteMinimoResult,
     CriticidadeResult,
     GrafoState,
     NoState,
@@ -129,6 +131,17 @@ def analisar_cascata(pedido: CascataRequest, network: NetworkDep) -> CascataResu
             seed=pedido.semente,
         )
     return CascataResult.from_domain(result)
+@app.post("/analise/corte-minimo")
+def calcular_corte_minimo(pedido: CorteMinimoRequest, network: NetworkDep) -> CorteMinimoResult:
+    """Calcula quantos cabos ativos separam dois roteadores pelo teorema de Menger."""
+    with _traduz_erros():
+        resultado = minimum_edge_cut(network, pedido.origem, pedido.destino)
+    return CorteMinimoResult(
+        capacidade=resultado.capacity,
+        arestas=[
+            ArestaRequest(origem=origem, destino=destino) for origem, destino in resultado.edges
+        ],
+    )
 
 
 @app.post("/rota")

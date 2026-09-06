@@ -76,6 +76,9 @@
               </button>
             </div>
           </div>
+          <button type="button" id="min-cut-button" class="min-cut-button" disabled>
+            Calcular corte mínimo
+          </button>
           <button type="button" id="reset-button" class="reset-button">
             &gt; reset --force
           </button>
@@ -99,6 +102,13 @@
         >
           <p id="criticality-title" class="route-label">Pontos únicos de falha</p>
           <p id="criticality-details" class="route-details">Analisando a rede…</p>
+        </section>
+
+        <section class="min-cut-summary" aria-labelledby="min-cut-title" aria-live="polite">
+          <p id="min-cut-title" class="route-label">Corte mínimo</p>
+          <p id="min-cut-details" class="route-details">
+            Selecione dois roteadores e calcule quantos cabos os separam.
+          </p>
         </section>
 
         <p class="network-hint">
@@ -126,6 +136,7 @@
             <li><span class="legend-edge legend-edge-route"></span>Caminho atual</li>
             <li><span class="legend-edge legend-edge-alternative"></span>Rota alternativa</li>
             <li><span class="legend-edge legend-edge-bridge"></span>Ponte (cabo crítico)</li>
+            <li><span class="legend-edge legend-edge-min-cut"></span>Corte mínimo</li>
           </ul>
         </aside>
 

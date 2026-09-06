@@ -154,6 +154,58 @@ def test_cascata_nao_altera_estado_global_da_api(client: TestClient):
 )
 def test_cascata_rejeita_parametros_invalidos(client: TestClient, pedido: dict[str, object]):
     assert client.post("/analise/cascata", json=pedido).status_code == 422
+def test_corte_minimo_devolve_dois_cabos_para_dois_caminhos_disjuntos(
+    client: TestClient,
+):
+    resposta = client.post("/analise/corte-minimo", json={"origem": "A", "destino": "D"})
+
+    assert resposta.status_code == 200
+    corpo = resposta.json()
+    assert corpo["capacidade"] == 2
+    assert len(corpo["arestas"]) == 2
+
+
+def test_corte_minimo_ja_desconectado_e_zero(client: TestClient):
+    resposta = client.post("/analise/corte-minimo", json={"origem": "A", "destino": "isolated"})
+
+    assert resposta.status_code == 200
+    assert resposta.json() == {"capacidade": 0, "arestas": []}
+
+
+def test_corte_minimo_rejeita_extremos_iguais(client: TestClient):
+    resposta = client.post("/analise/corte-minimo", json={"origem": "A", "destino": "A"})
+
+    assert resposta.status_code == 422
+
+
+def test_derrubar_corte_devolvido_particiona_rede_ponta_a_ponta(client: TestClient):
+    corte = client.post("/analise/corte-minimo", json={"origem": "A", "destino": "D"}).json()
+
+    for aresta in corte["arestas"]:
+        resposta = client.post("/arestas/derrubar", json=aresta)
+        assert resposta.status_code == 200
+
+    rota = client.post("/rota", json={"origem": "A", "destino": "D"})
+    assert rota.status_code == 200
+    assert rota.json()["encontrada"] is False
+
+
+def test_corte_minimo_respeita_cabo_ja_fora_do_ar(client: TestClient):
+    client.post("/arestas/derrubar", json={"origem": "A", "destino": "B"})
+
+    resposta = client.post("/analise/corte-minimo", json={"origem": "A", "destino": "D"})
+
+    assert resposta.status_code == 200
+    assert resposta.json()["capacidade"] == 1
+
+
+def test_corte_minimo_respeita_no_ja_fora_do_ar(client: TestClient):
+    client.post("/nos/B/derrubar")
+
+    resposta = client.post("/analise/corte-minimo", json={"origem": "A", "destino": "D"})
+
+    assert resposta.status_code == 200
+    assert resposta.json()["capacidade"] == 1
 
 
 def test_grafo_publica_a_ultima_rota_calculada(client: TestClient):
@@ -449,6 +501,7 @@ def test_openapi_documenta_todos_os_endpoints_tipados(client: TestClient):
         "/grafo",
         "/analise/criticidade",
         "/analise/cascata",
+        "/analise/corte-minimo",
         "/rota",
         "/rotas",
         "/nos/{no_id}/derrubar",
@@ -468,6 +521,8 @@ def test_openapi_documenta_todos_os_endpoints_tipados(client: TestClient):
         "CascataRequest",
         "CascataPonto",
         "CascataResult",
+        "CorteMinimoRequest",
+        "CorteMinimoResult",
     } <= set(schema["components"]["schemas"])
 
 

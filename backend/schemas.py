@@ -57,6 +57,20 @@ class ArestaRequest(BaseModel):
     destino: str
 
 
+class CorteMinimoRequest(BaseModel):
+    """Pedido de corte minimo de cabos entre dois roteadores distintos."""
+
+    origem: str
+    destino: str
+
+
+class CorteMinimoResult(BaseModel):
+    """Quantidade e identificacao dos cabos de um corte minimo."""
+
+    capacidade: int = Field(ge=0)
+    arestas: list[ArestaRequest]
+
+
 class RotaResult(BaseModel):
     """Rota calculada pelo algoritmo escolhido.
 
