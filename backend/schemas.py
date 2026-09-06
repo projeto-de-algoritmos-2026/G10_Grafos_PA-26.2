@@ -13,7 +13,7 @@ from pydantic import BaseModel, Field
 from backend.algorithms import RouteResult
 from backend.resilience import CascadeResult
 
-type AlgoritmoNome = Literal["dijkstra", "bellman_ford"]
+type AlgoritmoNome = Literal["dijkstra", "bellman_ford", "a_star"]
 type EstrategiaCascata = Literal["aleatoria", "grau", "articulacao"]
 
 
@@ -82,6 +82,12 @@ class RotaResult(BaseModel):
     custo: float | None
     encontrada: bool
     algoritmo: AlgoritmoNome
+    nos_expandidos: int = Field(
+        default=0, ge=0, description="Nos processados durante a busca, para comparar algoritmos"
+    )
+    arestas_relaxadas: int = Field(
+        default=0, ge=0, description="Tentativas de relaxamento de aresta durante a busca"
+    )
 
     @classmethod
     def from_domain(cls, resultado: RouteResult, algoritmo: AlgoritmoNome) -> "RotaResult":
@@ -91,6 +97,8 @@ class RotaResult(BaseModel):
             custo=resultado.cost if resultado.found else None,
             encontrada=resultado.found,
             algoritmo=algoritmo,
+            nos_expandidos=resultado.nodes_expanded,
+            arestas_relaxadas=resultado.edges_relaxed,
         )
 
 

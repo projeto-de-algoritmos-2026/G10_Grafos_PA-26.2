@@ -3,6 +3,7 @@
 import heapq
 import math
 
+from backend.algorithms._shared import require_non_negative_active_edges
 from backend.algorithms.result import RouteResult
 from backend.graph import Network
 
@@ -14,6 +15,10 @@ def dijkstra(network: Network, origin: str, destination: str) -> RouteResult:
     logaritmico, resultando em O((V + E) log V) com a lista de adjacencia da
     ``Network``. Uma busca linear pelo menor custo levaria a O(V²), menos
     adequada para as redes maiores usadas nos benchmarks do projeto.
+
+    ``nodes_expanded`` conta os nos efetivamente processados (entradas obsoletas
+    da fila sao ignoradas); ``edges_relaxed`` conta cada aresta examinada a
+    partir de um no processado, tenha ela melhorado o custo ou nao.
 
     Raises:
         KeyError: se a origem ou o destino nao existir.
@@ -27,36 +32,36 @@ def dijkstra(network: Network, origin: str, destination: str) -> RouteResult:
     if origin == destination:
         return RouteResult(path=[origin], cost=0.0, found=True)
 
-    _validate_active_edge_weights(network)
+    require_non_negative_active_edges(network, "Dijkstra")
 
     distances = dict.fromkeys(network.node_ids(), math.inf)
     distances[origin] = 0.0
     predecessors: dict[str, str] = {}
     queue: list[tuple[float, str]] = [(0.0, origin)]
+    nodes_expanded = 0
+    edges_relaxed = 0
 
     while queue:
         current_cost, current = heapq.heappop(queue)
         if current_cost > distances[current]:
             continue
+        nodes_expanded += 1
         if current == destination:
-            return RouteResult.from_predecessors(predecessors, origin, destination, current_cost)
+            return RouteResult.from_predecessors(
+                predecessors,
+                origin,
+                destination,
+                current_cost,
+                nodes_expanded=nodes_expanded,
+                edges_relaxed=edges_relaxed,
+            )
 
         for edge in network.neighbors(current):
+            edges_relaxed += 1
             new_cost = current_cost + edge.weight
             if new_cost < distances[edge.destination]:
                 distances[edge.destination] = new_cost
                 predecessors[edge.destination] = current
                 heapq.heappush(queue, (new_cost, edge.destination))
 
-    return RouteResult.not_found()
-
-
-def _validate_active_edge_weights(network: Network) -> None:
-    for origin, edge in network.edges():
-        if (
-            edge.is_up
-            and network.is_node_up(origin)
-            and network.is_node_up(edge.destination)
-            and edge.weight < 0
-        ):
-            raise ValueError("Dijkstra does not support negative edge weights")
+    return RouteResult.not_found(nodes_expanded=nodes_expanded, edges_relaxed=edges_relaxed)

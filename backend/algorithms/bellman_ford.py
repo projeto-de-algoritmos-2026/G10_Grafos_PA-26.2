@@ -25,6 +25,14 @@ def bellman_ford(network: Network, origin: str, destination: str) -> RouteResult
     O relaxamento para assim que uma rodada nao altera nenhum custo; nesse caso a
     busca ja convergiu e nao ha ciclo negativo alcancavel.
 
+    Ao contrario de Dijkstra/A*, Bellman-Ford nao seleciona um no de cada vez: a
+    cada rodada ele reexamina toda aresta cuja origem tenha distancia finita, mesmo
+    que ja estivesse estabilizada. ``nodes_expanded`` soma, rodada a rodada, quantos
+    nos distintos tiveram suas arestas de saida reexaminadas -- por isso tende a ser
+    bem maior que o de Dijkstra/A* no mesmo grafo, o que evidencia o custo de nao ter
+    uma fila de prioridade guiando a busca. ``edges_relaxed`` conta cada tentativa de
+    relaxamento (arestas com origem finita) somada sobre todas as rodadas.
+
     Raises:
         KeyError: se a origem ou o destino nao existir.
         NegativeCycleError: se houver ciclo negativo alcancavel pela origem.
@@ -38,17 +46,29 @@ def bellman_ford(network: Network, origin: str, destination: str) -> RouteResult
     distances = dict.fromkeys(network.node_ids(), math.inf)
     distances[origin] = 0.0
     predecessors: dict[str, str] = {}
+    nodes_expanded = 0
+    edges_relaxed = 0
 
     for _ in range(len(distances) - 1):
-        if not _relax_all(arcs, distances, predecessors):
+        changed, round_nodes, round_edges = _relax_all(arcs, distances, predecessors)
+        nodes_expanded += round_nodes
+        edges_relaxed += round_edges
+        if not changed:
             break
     else:
         if _has_relaxable_arc(arcs, distances):
             raise NegativeCycleError(f"Negative cycle reachable from {origin!r}")
 
     if math.isinf(distances[destination]):
-        return RouteResult.not_found()
-    return RouteResult.from_predecessors(predecessors, origin, destination, distances[destination])
+        return RouteResult.not_found(nodes_expanded=nodes_expanded, edges_relaxed=edges_relaxed)
+    return RouteResult.from_predecessors(
+        predecessors,
+        origin,
+        destination,
+        distances[destination],
+        nodes_expanded=nodes_expanded,
+        edges_relaxed=edges_relaxed,
+    )
 
 
 def _usable_arcs(network: Network) -> tuple[Arc, ...]:
@@ -68,18 +88,26 @@ def _relax_all(
     arcs: tuple[Arc, ...],
     distances: dict[str, float],
     predecessors: dict[str, str],
-) -> bool:
-    """Executa uma rodada de relaxamento e informa se algum custo mudou."""
+) -> tuple[bool, int, int]:
+    """Executa uma rodada de relaxamento.
+
+    Devolve se algum custo mudou, quantos nos distintos com distancia finita
+    tiveram suas arestas examinadas e quantas tentativas de relaxamento houve.
+    """
     changed = False
+    touched_origins: set[str] = set()
+    edges_relaxed = 0
     for origin, destination, weight in arcs:
         if math.isinf(distances[origin]):
             continue
+        touched_origins.add(origin)
+        edges_relaxed += 1
         new_cost = distances[origin] + weight
         if new_cost < distances[destination]:
             distances[destination] = new_cost
             predecessors[destination] = origin
             changed = True
-    return changed
+    return changed, len(touched_origins), edges_relaxed
 
 
 def _has_relaxable_arc(arcs: tuple[Arc, ...], distances: dict[str, float]) -> bool:

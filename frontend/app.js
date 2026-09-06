@@ -15,8 +15,15 @@ const elements = {
   destinationSelect: document.querySelector("#destination-select"),
   algoDijkstra: document.querySelector("#algo-dijkstra"),
   algoBellmanFord: document.querySelector("#algo-bellman-ford"),
+  algoAStar: document.querySelector("#algo-a-star"),
   minCutButton: document.querySelector("#min-cut-button"),
   resetButton: document.querySelector("#reset-button"),
+};
+
+const ALGORITHM_LABELS = {
+  dijkstra: "Dijkstra",
+  bellman_ford: "Bellman-Ford",
+  a_star: "A*",
 };
 
 const ROUTE_FLASH_COLOR = "#f2e6c2";
@@ -336,11 +343,11 @@ function renderRouteSummary(graph) {
   }
 
   const hops = Math.max(route.caminho.length - 1, 0);
-  const algorithm = route.algoritmo === "bellman_ford" ? "Bellman-Ford" : "Dijkstra";
+  const algorithm = ALGORITHM_LABELS[route.algoritmo] ?? route.algoritmo;
   const cost = Math.round(route.custo).toLocaleString("pt-BR");
   elements.routeDetails.textContent = `${algorithm} · ${cost} km · ${hops} ${
     hops === 1 ? "salto" : "saltos"
-  }`;
+  } · ${route.nos_expandidos} nós explorados`;
   elements.routeRedundancy.textContent = redundancyText();
 }
 
@@ -634,6 +641,7 @@ function setAlgorithm(algoritmo) {
   currentSelection.algoritmo = algoritmo;
   elements.algoDijkstra.setAttribute("aria-pressed", String(algoritmo === "dijkstra"));
   elements.algoBellmanFord.setAttribute("aria-pressed", String(algoritmo === "bellman_ford"));
+  elements.algoAStar.setAttribute("aria-pressed", String(algoritmo === "a_star"));
 }
 
 async function resetSimulation() {
@@ -699,6 +707,16 @@ function bindControls() {
 
   elements.algoBellmanFord.addEventListener("click", async () => {
     setAlgorithm("bellman_ford");
+    try {
+      clearActionError();
+      await recalculateAndRender();
+    } catch (error) {
+      showActionError(error);
+    }
+  });
+
+  elements.algoAStar.addEventListener("click", async () => {
+    setAlgorithm("a_star");
     try {
       clearActionError();
       await recalculateAndRender();

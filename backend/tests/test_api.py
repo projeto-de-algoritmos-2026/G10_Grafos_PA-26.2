@@ -215,14 +215,14 @@ def test_grafo_publica_a_ultima_rota_calculada(client: TestClient):
 
     rota_atual = client.get("/grafo").json()["rota_atual"]
 
-    assert rota_atual == {
-        "origem": "A",
-        "destino": "D",
-        "caminho": ["A", "B", "D"],
-        "custo": 3.0,
-        "encontrada": True,
-        "algoritmo": "dijkstra",
-    }
+    assert rota_atual["origem"] == "A"
+    assert rota_atual["destino"] == "D"
+    assert rota_atual["caminho"] == ["A", "B", "D"]
+    assert rota_atual["custo"] == 3.0
+    assert rota_atual["encontrada"] is True
+    assert rota_atual["algoritmo"] == "dijkstra"
+    assert rota_atual["nos_expandidos"] > 0
+    assert rota_atual["arestas_relaxadas"] > 0
 
 
 def test_grafo_preserva_extremos_quando_rota_nao_existe(client: TestClient):
@@ -244,19 +244,20 @@ def test_mudanca_na_topologia_invalida_rota_atual(client: TestClient):
     assert client.get("/grafo").json()["rota_atual"] is None
 
 
-@pytest.mark.parametrize("algoritmo", ["dijkstra", "bellman_ford"])
+@pytest.mark.parametrize("algoritmo", ["dijkstra", "bellman_ford", "a_star"])
 def test_rota_devolve_o_mesmo_caminho_minimo_nos_dois_algoritmos(
     client: TestClient, algoritmo: str
 ):
     response = client.post("/rota", json={"origem": "A", "destino": "D", "algoritmo": algoritmo})
 
     assert response.status_code == 200
-    assert response.json() == {
-        "caminho": ["A", "B", "D"],
-        "custo": 3.0,
-        "encontrada": True,
-        "algoritmo": algoritmo,
-    }
+    corpo = response.json()
+    assert corpo["caminho"] == ["A", "B", "D"]
+    assert corpo["custo"] == 3.0
+    assert corpo["encontrada"] is True
+    assert corpo["algoritmo"] == algoritmo
+    assert corpo["nos_expandidos"] > 0
+    assert corpo["arestas_relaxadas"] > 0
 
 
 def test_rota_usa_dijkstra_por_padrao(client: TestClient):
@@ -282,12 +283,11 @@ def test_rota_inexistente_devolve_custo_nulo_e_nao_erro(client: TestClient):
     response = client.post("/rota", json={"origem": "A", "destino": "isolated"})
 
     assert response.status_code == 200
-    assert response.json() == {
-        "caminho": [],
-        "custo": None,
-        "encontrada": False,
-        "algoritmo": "dijkstra",
-    }
+    corpo = response.json()
+    assert corpo["caminho"] == []
+    assert corpo["custo"] is None
+    assert corpo["encontrada"] is False
+    assert corpo["algoritmo"] == "dijkstra"
 
 
 def test_rota_com_no_inexistente_devolve_404(client: TestClient):
@@ -316,6 +316,8 @@ def test_rotas_k_igual_a_um_repete_o_resultado_de_rota(client: TestClient):
             "custo": rota["custo"],
             "encontrada": rota["encontrada"],
             "algoritmo": "dijkstra",
+            "nos_expandidos": rota["nos_expandidos"],
+            "arestas_relaxadas": rota["arestas_relaxadas"],
         }
     ]
 
