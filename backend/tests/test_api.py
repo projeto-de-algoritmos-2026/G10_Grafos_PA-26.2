@@ -192,6 +192,90 @@ def test_rota_com_algoritmo_desconhecido_devolve_422(client: TestClient):
     assert response.status_code == 422
 
 
+def test_rotas_k_igual_a_um_repete_o_resultado_de_rota(client: TestClient):
+    rota = client.post("/rota", json={"origem": "A", "destino": "D"}).json()
+
+    rotas = client.post("/rotas", json={"origem": "A", "destino": "D", "k": 1}).json()
+
+    assert rotas["rotas"] == [
+        {
+            "caminho": rota["caminho"],
+            "custo": rota["custo"],
+            "encontrada": rota["encontrada"],
+            "algoritmo": "dijkstra",
+        }
+    ]
+
+
+def test_rotas_devolve_lista_ordenada_por_custo_com_redundancia(client: TestClient):
+    """A rede de teste tem exatamente 4 caminhos simples de A a D: 3, 7, 7 e 9."""
+    response = client.post("/rotas", json={"origem": "A", "destino": "D", "k": 4})
+
+    assert response.status_code == 200
+    corpo = response.json()
+    assert corpo["origem"] == "A"
+    assert corpo["destino"] == "D"
+    assert corpo["encontrada"] is True
+    assert [rota["custo"] for rota in corpo["rotas"]] == [3.0, 7.0, 7.0, 9.0]
+    assert [rota["caminho"] for rota in corpo["rotas"]] == [
+        ["A", "B", "D"],
+        ["A", "B", "C", "D"],
+        ["A", "C", "B", "D"],
+        ["A", "C", "D"],
+    ]
+    assert corpo["redundancia_percentual"] == pytest.approx((7.0 - 3.0) / 3.0 * 100)
+
+
+def test_rotas_com_menos_caminhos_do_que_k_devolve_os_que_existem(client: TestClient):
+    response = client.post("/rotas", json={"origem": "A", "destino": "D", "k": 10})
+
+    assert response.status_code == 200
+    assert len(response.json()["rotas"]) == 4
+
+
+def test_rotas_rede_particionada_devolve_lista_vazia_com_200(client: TestClient):
+    response = client.post("/rotas", json={"origem": "A", "destino": "isolated", "k": 3})
+
+    assert response.status_code == 200
+    assert response.json() == {
+        "origem": "A",
+        "destino": "isolated",
+        "encontrada": False,
+        "rotas": [],
+        "redundancia_percentual": None,
+    }
+
+
+def test_rotas_com_uma_unica_rota_nao_calcula_redundancia(client: TestClient):
+    response = client.post("/rotas", json={"origem": "A", "destino": "A", "k": 5})
+
+    assert response.status_code == 200
+    corpo = response.json()
+    assert len(corpo["rotas"]) == 1
+    assert corpo["redundancia_percentual"] is None
+
+
+@pytest.mark.parametrize("k", [0, 11])
+def test_rotas_com_k_fora_do_intervalo_devolve_422(client: TestClient, k: int):
+    response = client.post("/rotas", json={"origem": "A", "destino": "D", "k": k})
+
+    assert response.status_code == 422
+
+
+def test_rotas_usa_k_igual_a_tres_por_padrao(client: TestClient):
+    response = client.post("/rotas", json={"origem": "A", "destino": "D"})
+
+    assert response.status_code == 200
+    assert len(response.json()["rotas"]) == 3
+
+
+def test_rotas_com_no_inexistente_devolve_404(client: TestClient):
+    response = client.post("/rotas", json={"origem": "A", "destino": "Z"})
+
+    assert response.status_code == 404
+    assert "Z" in response.json()["detail"]
+
+
 def test_derrubar_no_muda_o_grafo_e_forca_desvio(client: TestClient):
     response = client.post("/nos/B/derrubar")
 
@@ -306,6 +390,7 @@ def test_openapi_documenta_todos_os_endpoints_tipados(client: TestClient):
         "/grafo",
         "/analise/criticidade",
         "/rota",
+        "/rotas",
         "/nos/{no_id}/derrubar",
         "/nos/{no_id}/restaurar",
         "/arestas/derrubar",
@@ -316,6 +401,8 @@ def test_openapi_documenta_todos_os_endpoints_tipados(client: TestClient):
         "RotaAtual",
         "RotaRequest",
         "RotaResult",
+        "RotasRequest",
+        "RotasResult",
         "ArestaRequest",
         "CriticidadeResult",
     } <= set(schema["components"]["schemas"])
