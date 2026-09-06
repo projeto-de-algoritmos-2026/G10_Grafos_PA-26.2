@@ -97,6 +97,65 @@ def test_criticidade_reflete_falhas_ativas(client: TestClient):
     assert corpo["componentes"] == 2
 
 
+def test_cascata_devolve_ponto_inicial_e_um_por_remocao(client: TestClient):
+    resposta = client.post(
+        "/analise/cascata",
+        json={"estrategia": "aleatoria", "passos": 3, "semente": 2026},
+    )
+
+    assert resposta.status_code == 200
+    corpo = resposta.json()
+    assert corpo["estrategia"] == "aleatoria"
+    assert corpo["semente"] == 2026
+    assert corpo["total_inicial"] == 5
+    assert [ponto["passo"] for ponto in corpo["pontos"]] == [0, 1, 2, 3]
+    assert corpo["pontos"][0]["no_removido"] is None
+    assert {
+        "nos_ativos",
+        "fracao_removida",
+        "maior_componente_fracao",
+        "pares_alcancaveis_fracao",
+        "custo_medio_rotas",
+    } <= corpo["pontos"][0].keys()
+
+
+def test_cascata_com_mesma_semente_repete_a_sequencia(client: TestClient):
+    pedido = {"estrategia": "aleatoria", "passos": 5, "semente": 99}
+
+    primeira = client.post("/analise/cascata", json=pedido).json()
+    segunda = client.post("/analise/cascata", json=pedido).json()
+
+    assert [ponto["no_removido"] for ponto in primeira["pontos"]] == [
+        ponto["no_removido"] for ponto in segunda["pontos"]
+    ]
+
+
+def test_cascata_nao_altera_estado_global_da_api(client: TestClient):
+    client.post("/nos/B/derrubar")
+    client.post("/arestas/derrubar", json={"origem": "A", "destino": "C"})
+    antes = client.get("/grafo").json()
+
+    resposta = client.post(
+        "/analise/cascata",
+        json={"estrategia": "articulacao", "passos": 10, "semente": 42},
+    )
+
+    assert resposta.status_code == 200
+    assert client.get("/grafo").json() == antes
+
+
+@pytest.mark.parametrize(
+    "pedido",
+    [
+        {"estrategia": "inexistente", "passos": 1},
+        {"estrategia": "grau", "passos": -1},
+        {"estrategia": "grau", "passos": 10_001},
+    ],
+)
+def test_cascata_rejeita_parametros_invalidos(client: TestClient, pedido: dict[str, object]):
+    assert client.post("/analise/cascata", json=pedido).status_code == 422
+
+
 def test_corte_minimo_devolve_dois_cabos_para_dois_caminhos_disjuntos(
     client: TestClient,
 ):
@@ -445,6 +504,7 @@ def test_openapi_documenta_todos_os_endpoints_tipados(client: TestClient):
         "/status",
         "/grafo",
         "/analise/criticidade",
+        "/analise/cascata",
         "/analise/corte-minimo",
         "/rota",
         "/rotas",
@@ -462,6 +522,9 @@ def test_openapi_documenta_todos_os_endpoints_tipados(client: TestClient):
         "RotasResult",
         "ArestaRequest",
         "CriticidadeResult",
+        "CascataRequest",
+        "CascataPonto",
+        "CascataResult",
         "CorteMinimoRequest",
         "CorteMinimoResult",
     } <= set(schema["components"]["schemas"])

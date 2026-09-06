@@ -16,10 +16,11 @@ O projeto implementa um simulador visual de falhas em uma rede mundial. Pontos d
 conexão são modelados como vértices, cabos como arestas e a distância geodésica entre
 os pontos como peso. O usuário escolhe origem, destino e algoritmo de menor caminho;
 quando um nó cai, a topologia disponível muda e a rota é calculada novamente. Foram
-implementados Dijkstra e Bellman-Ford sem bibliotecas de algoritmos de grafos. Os
+implementados Dijkstra, Bellman-Ford e A* sem bibliotecas de algoritmos de grafos. Os
 testes empíricos mostram o comportamento quase linear-logarítmico de Dijkstra nos
-grafos esparsos avaliados e o pior caso quadrático de Bellman-Ford em uma topologia em
-caminho.
+grafos esparsos avaliados, o pior caso quadrático de Bellman-Ford em uma topologia em
+caminho, e a redução real de nós explorados que a heurística geodésica de A* traz sobre
+Dijkstra na malha mundial.
 
 ## 1. Contexto e objetivo
 
@@ -269,6 +270,27 @@ quando origem e destino já estão poucos saltos um do outro (ex.: `virginia-bea
 `bilbao` é um cabo praticamente direto), e cresce nos pares mais distantes, onde
 Dijkstra desperdiça mais exploração em direções erradas antes de convergir.
 
+### 6.4 Resiliência a falhas em cascata
+
+A malha real também foi submetida a 26 remoções progressivas usando três estratégias:
+aleatória com semente 42, maior grau e pontos de articulação. Cada execução operou
+sobre uma cópia, sem modificar o estado da API. A maior componente foi normalizada
+pelos 26 nós iniciais e os pares alcançáveis pelos 325 pares iniciais.
+
+Os ataques dirigidos reduziram a conectividade para menos de 50% dos pares após duas
+remoções (7,7% dos nós). A sequência aleatória medida cruzou o mesmo limiar após quatro
+remoções (15,4%). Depois de duas remoções, grau e articulação preservavam somente 24,9%
+dos pares; a sequência aleatória ainda preservava 55,7%.
+
+![Falhas aleatórias e ataques dirigidos](benchmark/cascata/curva_resiliencia.png)
+
+Os valores vêm da execução de 6 de setembro de 2026, às 14:26 UTC, em Windows 11,
+CPython 3.12.10 e processador AMD64 de 8 núcleos. Dados brutos, hash do dataset,
+parâmetros e interpretação completa estão em
+[benchmark/cascata/analise.md](benchmark/cascata/analise.md). Uma única semente não
+prova estatisticamente uma propriedade de redes livres de escala; ela demonstra, na
+topologia do projeto, o mecanismo de fragilidade a ataques dirigidos.
+
 ## 7. Resultados da interface
 
 As capturas abaixo foram produzidas em 4 de setembro de 2026 com a aplicação local em
@@ -336,4 +358,5 @@ demonstração quanto a análise apresentada.
 - [Documentação e fontes do dataset](rede-mundial.md)
 - [Metodologia e análise completa do benchmark](benchmark/analise.md)
 - [Dados brutos do benchmark](benchmark/benchmark.csv)
+- [Análise e dados da simulação em cascata](benchmark/cascata/analise.md)
 - [README com instalação e execução](../README.md)

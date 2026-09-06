@@ -11,10 +11,13 @@ from fastapi.staticfiles import StaticFiles
 
 from backend.algorithms import find_critical_points, k_shortest_paths, minimum_edge_cut
 from backend.graph import Network
+from backend.resilience import simulate_cascade
 from backend.schemas import (
     AlgoritmoNome,
     ArestaRequest,
     ArestaState,
+    CascataRequest,
+    CascataResult,
     CorteMinimoRequest,
     CorteMinimoResult,
     CriticidadeResult,
@@ -116,6 +119,19 @@ def obter_criticidade(network: NetworkDep) -> CriticidadeResult:
         ],
         componentes=resultado.components,
     )
+
+
+@app.post("/analise/cascata")
+def analisar_cascata(pedido: CascataRequest, network: NetworkDep) -> CascataResult:
+    """Mede a degradacao progressiva sem alterar a rede compartilhada pela API."""
+    with _traduz_erros():
+        result = simulate_cascade(
+            network,
+            strategy=pedido.estrategia,
+            steps=pedido.passos,
+            seed=pedido.semente,
+        )
+    return CascataResult.from_domain(result)
 
 
 @app.post("/analise/corte-minimo")
