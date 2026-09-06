@@ -206,7 +206,8 @@ h2 {
   margin-left: auto;
 }
 
-.route-summary {
+.route-summary,
+.criticality-summary {
   display: grid;
   grid-template-columns: auto 1fr auto;
   align-items: baseline;
@@ -216,7 +217,8 @@ h2 {
   background: rgba(100, 224, 187, 0.035);
 }
 
-.route-summary p {
+.route-summary p,
+.criticality-summary p {
   margin: 0;
 }
 
@@ -349,6 +351,12 @@ h2 {
   background: #f4bd5f;
 }
 
+.legend-node-articulation {
+  border-color: #ff8f3f;
+  border-width: 3px;
+  background: #49bfa1;
+}
+
 .legend-edge {
   width: 1.35rem;
   height: 0;
@@ -367,6 +375,12 @@ h2 {
 .legend-edge-route {
   border-color: #ffd166;
   border-top-width: 4px;
+}
+
+.legend-edge-bridge {
+  border-color: #ff8f3f;
+  border-top-width: 2px;
+  border-top-style: dotted;
 }
 
 .loading-indicator {
@@ -439,7 +453,8 @@ h2 {
     margin-left: 0;
   }
 
-  .route-summary {
+  .route-summary,
+  .criticality-summary {
     grid-template-columns: 1fr;
   }
 

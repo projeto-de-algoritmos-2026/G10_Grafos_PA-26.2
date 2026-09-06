@@ -9,13 +9,16 @@ from fastapi import Depends, FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
+from backend.algorithms import find_critical_points
 from backend.graph import Network
 from backend.schemas import (
     AlgoritmoNome,
     ArestaRequest,
     ArestaState,
+    CriticidadeResult,
     GrafoState,
     NoState,
+    PonteState,
     RotaAtual,
     RotaRequest,
     RotaResult,
@@ -94,6 +97,19 @@ def obter_grafo(request: Request, network: NetworkDep) -> GrafoState:
             for origem, edge in network.edges()
         ],
         rota_atual=getattr(request.app.state, "rota_atual", None),
+    )
+
+
+@app.get("/analise/criticidade")
+def obter_criticidade(network: NetworkDep) -> CriticidadeResult:
+    """Identifica pontos de articulacao e pontes na rede disponivel no momento."""
+    resultado = find_critical_points(network)
+    return CriticidadeResult(
+        articulacoes=list(resultado.articulation_points),
+        pontes=[
+            PonteState(origem=origem, destino=destino) for origem, destino in resultado.bridges
+        ],
+        componentes=resultado.components,
     )
 
 

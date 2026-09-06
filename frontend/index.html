@@ -83,6 +83,15 @@
           </p>
         </section>
 
+        <section
+          class="criticality-summary"
+          aria-labelledby="criticality-title"
+          aria-live="polite"
+        >
+          <p id="criticality-title" class="route-label">Pontos únicos de falha</p>
+          <p id="criticality-details" class="route-details">Analisando a rede…</p>
+        </section>
+
         <p class="network-hint">Clique em um nó para derrubá-lo ou restaurá-lo.</p>
 
         <div id="network" class="network-canvas" aria-busy="true">
@@ -99,9 +108,11 @@
             <li><span class="legend-node legend-node-down"></span>Nó derrubado</li>
             <li><span class="legend-node legend-node-origin"></span>Origem</li>
             <li><span class="legend-node legend-node-destination"></span>Destino</li>
+            <li><span class="legend-node legend-node-articulation"></span>Ponto de articulação</li>
             <li><span class="legend-edge legend-edge-active"></span>Conexão ativa</li>
             <li><span class="legend-edge legend-edge-down"></span>Conexão derrubada</li>
             <li><span class="legend-edge legend-edge-route"></span>Caminho atual</li>
+            <li><span class="legend-edge legend-edge-bridge"></span>Ponte (cabo crítico)</li>
           </ul>
         </aside>
 

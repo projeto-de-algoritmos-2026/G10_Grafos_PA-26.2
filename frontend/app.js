@@ -8,6 +8,7 @@ const elements = {
   libraryStatus: document.querySelector("#library-status"),
   routeDescription: document.querySelector("#route-description"),
   routeDetails: document.querySelector("#route-details"),
+  criticalityDetails: document.querySelector("#criticality-details"),
   originSelect: document.querySelector("#origin-select"),
   destinationSelect: document.querySelector("#destination-select"),
   algoDijkstra: document.querySelector("#algo-dijkstra"),
@@ -31,13 +32,17 @@ const COLORS = {
   edge: "#52736d",
   edgeDown: "#b2525a",
   route: "#ffd166",
+  articulation: "#ff8f3f",
+  bridge: "#ff8f3f",
 };
+const BRIDGE_DASH_PATTERN = [2, 6];
 
 let visualization;
 let resizeObserver;
 let nodesDataSet;
 let edgesDataSet;
 let currentGraph;
+let currentCriticidade = { articulacoes: [], pontes: [], componentes: 0 };
 
 const currentSelection = {
   origem: null,
@@ -89,27 +94,40 @@ function nodeColors(node, route) {
   return { background: COLORS.node, border: COLORS.nodeBorder };
 }
 
+function articulationPointIds() {
+  return new Set(currentCriticidade.articulacoes);
+}
+
+function bridgeEdgeIds() {
+  return new Set(currentCriticidade.pontes.map((ponte) => edgeKey(ponte.origem, ponte.destino)));
+}
+
 function toVisNodes(graph) {
+  const articulationPoints = articulationPointIds();
+
   return graph.nos.map((node) => {
     const position = projectCoordinates(node);
     const color = nodeColors(node, graph.rota_atual);
     const isEndpoint =
       graph.rota_atual?.origem === node.id || graph.rota_atual?.destino === node.id;
+    const isArticulation = articulationPoints.has(node.id);
+    const border = isArticulation ? COLORS.articulation : color.border;
 
     return {
       id: node.id,
       label: node.nome.split(",")[0],
       title: `${node.nome}<br>${node.lat.toFixed(2)}°, ${node.lon.toFixed(2)}°<br>${
         node.ativo ? "Ativo" : "Derrubado"
-      }`,
+      }${isArticulation ? "<br>Ponto de articulação" : ""}`,
       ...position,
       fixed: { x: true, y: true },
       size: isEndpoint ? 18 : 13,
-      borderWidth: isEndpoint ? 4 : 2,
+      borderWidth: isArticulation ? 4 : isEndpoint ? 4 : 2,
       color: {
-        ...color,
-        highlight: color,
-        hover: color,
+        background: color.background,
+        border,
+        highlight: { background: color.background, border },
+        hover: { background: color.background, border },
       },
     };
   });
@@ -117,15 +135,19 @@ function toVisNodes(graph) {
 
 function toVisEdges(graph) {
   const routeEdges = currentRouteEdges(graph.rota_atual);
+  const bridgeEdges = bridgeEdgeIds();
 
   return graph.arestas.map((edge) => {
     const id = edgeKey(edge.origem, edge.destino);
     const belongsToRoute = routeEdges.has(id);
+    const isBridge = bridgeEdges.has(id);
     const color = belongsToRoute
       ? COLORS.route
-      : edge.ativo
-        ? COLORS.edge
-        : COLORS.edgeDown;
+      : isBridge
+        ? COLORS.bridge
+        : edge.ativo
+          ? COLORS.edge
+          : COLORS.edgeDown;
 
     return {
       id,
@@ -133,10 +155,10 @@ function toVisEdges(graph) {
       to: edge.destino,
       title: `${edge.cabo}<br>${Math.round(edge.peso).toLocaleString("pt-BR")} km<br>${
         edge.ativo ? "Ativa" : "Derrubada"
-      }`,
-      width: belongsToRoute ? 5 : edge.ativo ? 1.5 : 2,
+      }${isBridge ? "<br>Ponte (ponto único de falha)" : ""}`,
+      width: belongsToRoute ? 5 : isBridge ? 2.5 : edge.ativo ? 1.5 : 2,
       color: { color, highlight: color, hover: color, opacity: edge.ativo ? 1 : 0.75 },
-      dashes: !edge.ativo,
+      dashes: isBridge && !belongsToRoute ? BRIDGE_DASH_PATTERN : !edge.ativo,
       smooth: false,
       chosen: false,
     };
@@ -253,6 +275,7 @@ async function toggleNode(nodeId) {
       throw new Error(`A API respondeu com HTTP ${response.status}.`);
     }
     currentGraph = await fetchGraph();
+    currentCriticidade = await fetchCriticidade();
     await recalculateAndRender();
   } catch (error) {
     showActionError(error);
@@ -292,11 +315,35 @@ async function recalculateAndRender() {
   const previousRouteEdges = await refreshRoute();
   updateNetwork(currentGraph);
   renderRouteSummary(currentGraph);
+  renderCriticalitySummary();
 
   const newRouteEdges = [...currentRouteEdges(currentGraph.rota_atual)].filter(
     (edgeId) => !previousRouteEdges.has(edgeId),
   );
   flashRouteEdges(newRouteEdges);
+}
+
+function renderCriticalitySummary() {
+  const routerCount = currentCriticidade.articulacoes.length;
+  const cableCount = currentCriticidade.pontes.length;
+
+  if (routerCount === 0 && cableCount === 0) {
+    elements.criticalityDetails.textContent =
+      "Nenhum ponto único de falha identificado na rede disponível.";
+    return;
+  }
+
+  const routerLabel = routerCount === 1 ? "roteador" : "roteadores";
+  const cableLabel = cableCount === 1 ? "cabo" : "cabos";
+  const parts = [];
+  if (routerCount > 0) {
+    parts.push(`${routerCount} ${routerLabel}`);
+  }
+  if (cableCount > 0) {
+    parts.push(`${cableCount} ${cableLabel}`);
+  }
+  const verb = routerCount + cableCount === 1 ? "é" : "são";
+  elements.criticalityDetails.textContent = `${parts.join(" e ")} ${verb} ponto único de falha.`;
 }
 
 function populateEndpointSelects(graph) {
@@ -336,6 +383,7 @@ async function resetSimulation() {
       ),
     ]);
     currentGraph = await fetchGraph();
+    currentCriticidade = await fetchCriticidade();
     await recalculateAndRender();
   } catch (error) {
     showActionError(error);
@@ -408,6 +456,7 @@ function showGraph(graph) {
   setAlgorithm(currentSelection.algoritmo);
   bindControls();
   renderRouteSummary(graph);
+  renderCriticalitySummary();
   elements.nodeCount.textContent = graph.nos.length;
   elements.edgeCount.textContent = graph.arestas.length;
   elements.libraryStatus.textContent = "vis-network ativa";
@@ -449,10 +498,23 @@ async function fetchGraph() {
   return graph;
 }
 
+async function fetchCriticidade() {
+  const response = await fetch("/analise/criticidade", {
+    headers: { Accept: "application/json" },
+  });
+
+  if (!response.ok) {
+    throw new Error(`A API respondeu com HTTP ${response.status}.`);
+  }
+
+  return response.json();
+}
+
 async function initialize() {
   try {
     const graph = await fetchGraph();
     console.info("Grafo recebido da API:", graph);
+    currentCriticidade = await fetchCriticidade();
     showGraph(graph);
   } catch (error) {
     showLoadError(error);
