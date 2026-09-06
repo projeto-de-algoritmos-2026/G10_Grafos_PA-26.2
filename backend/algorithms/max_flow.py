@@ -35,11 +35,9 @@ def minimum_edge_cut(network: Network, source: str, sink: str) -> MinCutResult:
         KeyError: se algum extremo nao existir.
         ValueError: se origem e destino forem o mesmo no.
     """
-    source_is_up = network.is_node_up(source)
-    sink_is_up = network.is_node_up(sink)
     if source == sink:
         raise ValueError("Origin and destination must be different")
-    if not source_is_up or not sink_is_up:
+    if not network.is_node_up(source) or not network.is_node_up(sink):
         return MinCutResult(capacity=0, edges=[])
 
     active_nodes = {node_id for node_id in network.node_ids() if network.is_node_up(node_id)}
@@ -57,8 +55,7 @@ def minimum_edge_cut(network: Network, source: str, sink: str) -> MinCutResult:
     maximum_flow = 0
     while (parents := _augmenting_path(residual, source, sink)) is not None:
         bottleneck = min(
-            residual[parents[node]][node]
-            for node in _path_nodes(parents, source, sink)
+            residual[parents[node]][node] for node in _path_nodes(parents, source, sink)
         )
         node = sink
         while node != source:

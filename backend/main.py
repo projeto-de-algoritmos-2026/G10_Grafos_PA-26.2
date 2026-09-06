@@ -118,17 +118,14 @@ def obter_criticidade(network: NetworkDep) -> CriticidadeResult:
 
 
 @app.post("/analise/corte-minimo")
-def calcular_corte_minimo(
-    pedido: CorteMinimoRequest, network: NetworkDep
-) -> CorteMinimoResult:
+def calcular_corte_minimo(pedido: CorteMinimoRequest, network: NetworkDep) -> CorteMinimoResult:
     """Calcula quantos cabos ativos separam dois roteadores pelo teorema de Menger."""
     with _traduz_erros():
         resultado = minimum_edge_cut(network, pedido.origem, pedido.destino)
     return CorteMinimoResult(
         capacidade=resultado.capacity,
         arestas=[
-            ArestaRequest(origem=origem, destino=destino)
-            for origem, destino in resultado.edges
+            ArestaRequest(origem=origem, destino=destino) for origem, destino in resultado.edges
         ],
     )
 

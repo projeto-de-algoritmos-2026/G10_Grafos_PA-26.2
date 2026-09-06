@@ -100,9 +100,7 @@ def test_criticidade_reflete_falhas_ativas(client: TestClient):
 def test_corte_minimo_devolve_dois_cabos_para_dois_caminhos_disjuntos(
     client: TestClient,
 ):
-    resposta = client.post(
-        "/analise/corte-minimo", json={"origem": "A", "destino": "D"}
-    )
+    resposta = client.post("/analise/corte-minimo", json={"origem": "A", "destino": "D"})
 
     assert resposta.status_code == 200
     corpo = resposta.json()
@@ -111,26 +109,20 @@ def test_corte_minimo_devolve_dois_cabos_para_dois_caminhos_disjuntos(
 
 
 def test_corte_minimo_ja_desconectado_e_zero(client: TestClient):
-    resposta = client.post(
-        "/analise/corte-minimo", json={"origem": "A", "destino": "isolated"}
-    )
+    resposta = client.post("/analise/corte-minimo", json={"origem": "A", "destino": "isolated"})
 
     assert resposta.status_code == 200
     assert resposta.json() == {"capacidade": 0, "arestas": []}
 
 
 def test_corte_minimo_rejeita_extremos_iguais(client: TestClient):
-    resposta = client.post(
-        "/analise/corte-minimo", json={"origem": "A", "destino": "A"}
-    )
+    resposta = client.post("/analise/corte-minimo", json={"origem": "A", "destino": "A"})
 
     assert resposta.status_code == 422
 
 
 def test_derrubar_corte_devolvido_particiona_rede_ponta_a_ponta(client: TestClient):
-    corte = client.post(
-        "/analise/corte-minimo", json={"origem": "A", "destino": "D"}
-    ).json()
+    corte = client.post("/analise/corte-minimo", json={"origem": "A", "destino": "D"}).json()
 
     for aresta in corte["arestas"]:
         resposta = client.post("/arestas/derrubar", json=aresta)
@@ -144,9 +136,7 @@ def test_derrubar_corte_devolvido_particiona_rede_ponta_a_ponta(client: TestClie
 def test_corte_minimo_respeita_cabo_ja_fora_do_ar(client: TestClient):
     client.post("/arestas/derrubar", json={"origem": "A", "destino": "B"})
 
-    resposta = client.post(
-        "/analise/corte-minimo", json={"origem": "A", "destino": "D"}
-    )
+    resposta = client.post("/analise/corte-minimo", json={"origem": "A", "destino": "D"})
 
     assert resposta.status_code == 200
     assert resposta.json()["capacidade"] == 1
@@ -155,9 +145,7 @@ def test_corte_minimo_respeita_cabo_ja_fora_do_ar(client: TestClient):
 def test_corte_minimo_respeita_no_ja_fora_do_ar(client: TestClient):
     client.post("/nos/B/derrubar")
 
-    resposta = client.post(
-        "/analise/corte-minimo", json={"origem": "A", "destino": "D"}
-    )
+    resposta = client.post("/analise/corte-minimo", json={"origem": "A", "destino": "D"})
 
     assert resposta.status_code == 200
     assert resposta.json()["capacidade"] == 1
