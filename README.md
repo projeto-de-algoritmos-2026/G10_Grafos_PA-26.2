@@ -2,8 +2,8 @@
 
 Projeto da disciplina de Projeto de Algoritmos que representa uma malha mundial de
 cabos como um grafo ponderado e recalcula a menor rota quando um nó ou uma conexão
-fica indisponível. A aplicação permite comparar Dijkstra e Bellman-Ford e acompanhar
-o resultado em uma interface web interativa.
+fica indisponível. A aplicação permite comparar Dijkstra, Bellman-Ford e A* e
+acompanhar o resultado em uma interface web interativa.
 
 ![Interface com uma rota recalculada após a queda de um nó](docs/images/rota-recalculada.png)
 
@@ -11,7 +11,7 @@ o resultado em uma interface web interativa.
 
 - visualização de 26 pontos de conexão e 30 ligações associadas a sistemas reais de
   cabos submarinos;
-- cálculo de menor caminho com Dijkstra ou Bellman-Ford;
+- cálculo de menor caminho com Dijkstra, Bellman-Ford ou A* (heurística geodésica);
 - queda e restauração de nós por clique;
 - recálculo e destaque da rota sem recarregar a página;
 - indicação de rede particionada quando não existe caminho disponível;
@@ -49,7 +49,7 @@ uv run uvicorn backend.main:app --reload
 Abra <http://localhost:8000/> no navegador. Para testar o recálculo:
 
 1. selecione uma origem e um destino;
-2. escolha Dijkstra ou Bellman-Ford;
+2. escolha Dijkstra, Bellman-Ford ou A*;
 3. clique em um nó do grafo para derrubá-lo;
 4. observe a nova rota ou o aviso de particionamento;
 5. clique novamente no nó para restaurá-lo ou use **Resetar simulação**.
@@ -65,7 +65,7 @@ O estado da simulação fica somente em memória. Reiniciar o processo restaura 
 
 ```text
 backend/
-├── algorithms/       # Dijkstra, Bellman-Ford e resultado compartilhado
+├── algorithms/       # Dijkstra, Bellman-Ford, A* e resultado compartilhado
 ├── data/rede.json    # topologia mundial usada pela aplicação
 ├── tests/            # testes unitários e de integração da API
 ├── graph.py          # grafo ponderado não dirigido

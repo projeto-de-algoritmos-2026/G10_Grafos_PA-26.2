@@ -43,6 +43,7 @@ from backend.state import get_network, network_lifespan
 _ALGORITMOS: dict[AlgoritmoNome, RoutingAlgorithm] = {
     "dijkstra": "dijkstra",
     "bellman_ford": "bellman-ford",
+    "a_star": "a-star",
 }
 
 app = FastAPI(

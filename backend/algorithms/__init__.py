@@ -1,5 +1,6 @@
 """Algoritmos de grafos usados pelo simulador."""
 
+from backend.algorithms.a_star import a_star
 from backend.algorithms.bellman_ford import NegativeCycleError, bellman_ford
 from backend.algorithms.connectivity import CriticalityResult, find_critical_points
 from backend.algorithms.dijkstra import dijkstra
@@ -12,6 +13,7 @@ __all__ = [
     "NegativeCycleError",
     "MinCutResult",
     "RouteResult",
+    "a_star",
     "bellman_ford",
     "dijkstra",
     "find_critical_points",

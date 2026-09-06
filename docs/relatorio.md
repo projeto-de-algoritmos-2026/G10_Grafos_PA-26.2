@@ -130,15 +130,40 @@ que materializa os dois arcos de cada cabo antes do relaxamento. Há saída ante
 quando uma rodada inteira não muda nenhum custo, o que melhora muitos casos práticos
 sem alterar a cota de pior caso.
 
-### 4.3 Comparação teórica
+### 4.3 A*
+
+A* é uma variante de Dijkstra guiada por uma heurística `h(n)`: em vez de priorizar
+pela fila só pelo custo acumulado `g(n)`, prioriza por `f(n) = g(n) + h(n)`, uma
+estimativa do custo restante até o destino. O dataset guarda latitude e longitude de
+cada nó e o peso de cada aresta é exatamente a distância Haversine entre seus
+extremos (`backend/dataset.py`, `NetworkDataset.validate_topology`); isso dá de graça
+uma heurística `h(n) = haversine(n, destino)` **admissível e consistente**: pela
+desigualdade triangular na esfera, nenhum caminho de `n` até o destino custa menos que
+a distância geodésica direta. Heurística admissível e consistente garante que A* nunca
+reabre um nó já processado e sempre devolve o mesmo caminho ótimo de Dijkstra — a
+implementação (`backend/algorithms/a_star.py`) reaproveita exatamente a mesma estrutura
+de fila e o mesmo critério de descarte de entrada obsoleta do Dijkstra do projeto,
+trocando apenas a prioridade.
+
+A heurística só é válida enquanto o peso da aresta representar quilômetros: se uma
+métrica futura (latência, capacidade) substituir a distância, `h` deixa de ser cota
+inferior garantida e A* precisaria de sua própria heurística admissível para essa
+métrica, ou usar Dijkstra/Bellman-Ford.
+
+Complexidade de pior caso igual à de Dijkstra, `O((V + E) log V)`, pois a heurística
+não muda a estrutura da busca — só a ordem de exploração. Na prática, guiar a busca
+para o destino faz A* expandir menos nós, medido na seção 6.3.
+
+### 4.4 Comparação teórica
 
 | Algoritmo | Tempo | Espaço auxiliar nesta implementação | Peso negativo |
 |---|---:|---:|---|
 | Dijkstra com heap | `O((V + E) log V)` | `O(V)` | não |
 | Bellman-Ford | `O(VE)` no pior caso | `O(V + E)` | sim, com detecção de ciclo negativo |
+| A* com heurística Haversine | `O((V + E) log V)` | `O(V)` | não |
 
-Para uma malha esparsa, em que `E` cresce proporcionalmente a `V`, Dijkstra tende a
-`O(V log V)`, enquanto o pior caso de Bellman-Ford tende a `O(V²)`.
+Para uma malha esparsa, em que `E` cresce proporcionalmente a `V`, Dijkstra e A* tendem
+a `O(V log V)`, enquanto o pior caso de Bellman-Ford tende a `O(V²)`.
 
 ## 5. Arquitetura da solução
 
@@ -203,6 +228,46 @@ do fator `V`; por isso o crescimento medido foi muito menor que o pior caso.
 Os tempos absolutos pertencem à máquina registrada e não devem ser generalizados.
 A conclusão relevante é a forma de crescimento. A análise detalhada está em
 [benchmark/analise.md](benchmark/analise.md).
+
+### 6.3 Dijkstra x A*: nós expandidos na malha real
+
+Reproduzir:
+
+```sh
+uv run python scripts/comparar_dijkstra_a_star.py
+```
+
+Diferente do benchmark de tempo (seção 6.1), esta medição roda sobre a malha mundial
+real (`backend/data/rede.json`, 26 nós, 30 cabos) em vez de grafos sintéticos: é nela
+que a heurística Haversine é informativa, porque os nós têm coordenadas geográficas de
+verdade. O script calcula Dijkstra e A* para os 650 pares ordenados (origem, destino)
+dos 26 nós, confirma que os dois concordam em custo em todos eles e conta quantos nós
+cada um expandiu. Dados brutos em
+[benchmark/nos_expandidos.csv](benchmark/nos_expandidos.csv).
+
+| | |
+|---|---|
+| Pares avaliados | 650 (todos os nós, ordenados) |
+| Custo divergente entre os algoritmos | 0 de 650 |
+| Média de nós expandidos — Dijkstra | 14,00 |
+| Média de nós expandidos — A* | 10,15 |
+| Redução média de A* sobre Dijkstra | 27,5% |
+
+Nos pares transatlânticos citados como critério de aceite da issue #30 — que cruzam o
+Atlântico entre landing points nos Estados Unidos e na Península Ibérica — a redução é
+maior que a média geral, porque a heurística geodésica descarta cedo os desvios pela
+África e pela Ásia que Dijkstra ainda testa por terem custo acumulado competitivo:
+
+| Origem | Destino | Nós expandidos (Dijkstra) | Nós expandidos (A*) |
+|---|---|---:|---:|
+| virginia-beach | sines | 7 | 4 |
+| los-angeles | carcavelos | 13 | 6 |
+| virginia-beach | bilbao | 3 | 2 |
+
+Em nenhum dos 650 pares A* expandiu mais nós que Dijkstra; a diferença tende a zero
+quando origem e destino já estão poucos saltos um do outro (ex.: `virginia-beach` →
+`bilbao` é um cabo praticamente direto), e cresce nos pares mais distantes, onde
+Dijkstra desperdiça mais exploração em direções erradas antes de convergir.
 
 ## 7. Resultados da interface
 

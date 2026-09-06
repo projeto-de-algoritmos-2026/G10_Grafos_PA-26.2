@@ -3,15 +3,16 @@
 from collections.abc import Callable
 from typing import Literal
 
-from backend.algorithms import RouteResult, bellman_ford, dijkstra
+from backend.algorithms import RouteResult, a_star, bellman_ford, dijkstra
 from backend.graph import Network
 
-type RoutingAlgorithm = Literal["dijkstra", "bellman-ford"]
+type RoutingAlgorithm = Literal["dijkstra", "bellman-ford", "a-star"]
 type RouteCalculator = Callable[[Network, str, str], RouteResult]
 
 _ALGORITHMS: dict[RoutingAlgorithm, RouteCalculator] = {
     "dijkstra": dijkstra,
     "bellman-ford": bellman_ford,
+    "a-star": a_star,
 }
 
 
