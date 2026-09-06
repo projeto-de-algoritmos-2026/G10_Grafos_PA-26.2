@@ -87,6 +87,25 @@
           </button>
         </section>
 
+        <section class="trace-controls" aria-label="Execução passo a passo">
+          <p class="route-label">Execução do algoritmo</p>
+          <div class="trace-actions">
+            <button type="button" id="trace-play-button" class="algo-button" disabled>
+              Reproduzir
+            </button>
+            <button type="button" id="trace-step-button" class="algo-button" disabled>
+              Próximo passo
+            </button>
+            <label for="trace-speed">Velocidade</label>
+            <select id="trace-speed">
+              <option value="900">Lenta</option>
+              <option value="450" selected>Normal</option>
+              <option value="150">Rápida</option>
+            </select>
+          </div>
+          <p id="trace-status" class="route-details">Calcule uma rota para carregar o traço.</p>
+        </section>
+
         <section class="route-summary" aria-labelledby="route-title" aria-live="polite">
           <p id="route-title" class="route-label">Rota atual</p>
           <p id="route-description" class="route-description">

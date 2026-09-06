@@ -18,6 +18,10 @@ const elements = {
   algoAStar: document.querySelector("#algo-a-star"),
   minCutButton: document.querySelector("#min-cut-button"),
   resetButton: document.querySelector("#reset-button"),
+  tracePlayButton: document.querySelector("#trace-play-button"),
+  traceStepButton: document.querySelector("#trace-step-button"),
+  traceSpeed: document.querySelector("#trace-speed"),
+  traceStatus: document.querySelector("#trace-status"),
 };
 
 const ALGORITHM_LABELS = {
@@ -65,6 +69,10 @@ let currentAlternateRoutes = [];
 let currentRedundancyPercent = null;
 let currentMinCut = null;
 let currentMinCutEdgeIds = new Set();
+let currentTrace = [];
+let currentTraceIndex = 0;
+let traceTimer;
+let traceEvent;
 
 const currentSelection = {
   origem: null,
@@ -115,6 +123,9 @@ function bridgeEdgeIds() {
 }
 
 function pointColorFor(node, route) {
+  if (traceEvent?.tipo === "visita" && traceEvent.no === node.id) {
+    return "#e0c07a";
+  }
   const isOrigin = route?.origem === node.id;
   const isDestination = route?.destino === node.id;
 
@@ -233,6 +244,10 @@ function toGlobeArcs(graph) {
       const isBridge = bridgeEdges.has(id);
       const isFlashed = flashedEdgeIds.has(id);
       const isMinCut = currentMinCutEdgeIds.has(id);
+      const isTraceEdge =
+        traceEvent &&
+        traceEvent.tipo === "relaxa" &&
+        edgeKey(traceEvent.origem, traceEvent.destino) === id;
       const alternate = belongsToRoute ? undefined : alternateEdges.get(id);
 
       let color = edge.ativo ? COLORS.edge : COLORS.edgeDown;
@@ -250,6 +265,9 @@ function toGlobeArcs(graph) {
       }
       if (isMinCut) {
         color = COLORS.minCut;
+      }
+      if (isTraceEdge) {
+        color = "#e0c07a";
       }
 
       // Tracos curtos: um padrao longo deixaria so dois segmentos por arco, que
@@ -539,6 +557,7 @@ async function refreshRoute() {
 
 async function recalculateAndRender() {
   const previousRouteEdges = await refreshRoute();
+  await loadTrace();
   updateGlobe(currentGraph);
   renderRouteSummary(currentGraph);
   renderCriticalitySummary();
@@ -653,25 +672,59 @@ async function resetSimulation() {
   try {
     clearActionError();
     clearMinimumCut();
-    const downNodes = currentGraph.nos.filter((node) => !node.ativo);
-    const downEdges = currentGraph.arestas.filter((edge) => !edge.ativo);
-    await Promise.all([
-      ...downNodes.map((node) =>
-        fetch(`/nos/${encodeURIComponent(node.id)}/restaurar`, { method: "POST" }),
-      ),
-      ...downEdges.map((edge) =>
-        fetch("/arestas/restaurar", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ origem: edge.origem, destino: edge.destino }),
-        }),
-      ),
-    ]);
-    currentGraph = await fetchGraph();
+    const response = await fetch("/simulacao/resetar", { method: "POST" });
+    if (!response.ok) throw new Error(`A API respondeu com HTTP ${response.status}.`);
+    currentGraph = await response.json();
     currentCriticidade = await fetchCriticidade();
     await recalculateAndRender();
   } catch (error) {
     showActionError(error);
+  }
+
+  async function loadTrace() {
+    if (!currentSelection.origem || !currentSelection.destino) return;
+    const response = await fetch("/rota/passos", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(currentSelection),
+    });
+    if (!response.ok) throw new Error(`A API respondeu com HTTP ${response.status}.`);
+    const payload = await response.json();
+    currentTrace = payload.passos;
+    currentTraceIndex = 0;
+    traceEvent = null;
+    elements.tracePlayButton.disabled = currentTrace.length === 0;
+    elements.traceStepButton.disabled = currentTrace.length === 0;
+    elements.traceStatus.textContent = `${currentTrace.length} passos carregados${payload.truncado ? " (limite atingido)" : ""}.`;
+    updateGlobe(currentGraph);
+  }
+
+  function applyTraceStep() {
+    if (currentTraceIndex >= currentTrace.length) {
+      clearInterval(traceTimer);
+      traceTimer = undefined;
+      elements.tracePlayButton.textContent = "Reproduzir";
+      return;
+    }
+    traceEvent = currentTrace[currentTraceIndex];
+    currentTraceIndex += 1;
+    elements.traceStatus.textContent = `Passo ${currentTraceIndex}/${currentTrace.length}: ${traceEvent.tipo}`;
+    updateGlobe(currentGraph);
+  }
+
+  function toggleTracePlayback() {
+    if (traceTimer) {
+      clearInterval(traceTimer);
+      traceTimer = undefined;
+      elements.tracePlayButton.textContent = "Reproduzir";
+      return;
+    }
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      while (currentTraceIndex < currentTrace.length) applyTraceStep();
+      return;
+    }
+    elements.tracePlayButton.textContent = "Pausar";
+    traceTimer = window.setInterval(applyTraceStep, Number(elements.traceSpeed.value));
   }
 }
 
@@ -732,6 +785,8 @@ function bindControls() {
 
   elements.minCutButton.addEventListener("click", calculateMinimumCut);
   elements.resetButton.addEventListener("click", resetSimulation);
+  elements.tracePlayButton.addEventListener("click", toggleTracePlayback);
+  elements.traceStepButton.addEventListener("click", applyTraceStep);
 }
 
 function clearActionError() {

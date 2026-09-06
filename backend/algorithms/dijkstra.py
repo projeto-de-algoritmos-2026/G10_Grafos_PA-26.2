@@ -4,11 +4,18 @@ import heapq
 import math
 
 from backend.algorithms._shared import require_non_negative_active_edges
-from backend.algorithms.result import RouteResult
+from backend.algorithms.result import RouteResult, TraceEvent
 from backend.graph import Network
 
 
-def dijkstra(network: Network, origin: str, destination: str) -> RouteResult:
+def dijkstra(
+    network: Network,
+    origin: str,
+    destination: str,
+    *,
+    trace: list[TraceEvent] | None = None,
+    max_trace_events: int = 5000,
+) -> RouteResult:
     """Calcula o caminho de menor custo entre dois nos disponiveis.
 
     A fila de prioridade de ``heapq`` permite selecionar o proximo no em tempo
@@ -44,7 +51,9 @@ def dijkstra(network: Network, origin: str, destination: str) -> RouteResult:
     while queue:
         current_cost, current = heapq.heappop(queue)
         if current_cost > distances[current]:
+            _trace(trace, TraceEvent("descarta", no=current, custo=current_cost), max_trace_events)
             continue
+        _trace(trace, TraceEvent("visita", no=current, custo=current_cost), max_trace_events)
         nodes_expanded += 1
         if current == destination:
             return RouteResult.from_predecessors(
@@ -59,9 +68,25 @@ def dijkstra(network: Network, origin: str, destination: str) -> RouteResult:
         for edge in network.neighbors(current):
             edges_relaxed += 1
             new_cost = current_cost + edge.weight
+            event_type = "relaxa" if new_cost < distances[edge.destination] else "descarta"
+            _trace(
+                trace,
+                TraceEvent(
+                    event_type,
+                    origem=current,
+                    destino=edge.destination,
+                    custo=new_cost,
+                ),
+                max_trace_events,
+            )
             if new_cost < distances[edge.destination]:
                 distances[edge.destination] = new_cost
                 predecessors[edge.destination] = current
                 heapq.heappush(queue, (new_cost, edge.destination))
 
     return RouteResult.not_found(nodes_expanded=nodes_expanded, edges_relaxed=edges_relaxed)
+
+
+def _trace(trace: list[TraceEvent] | None, event: TraceEvent, limit: int) -> None:
+    if trace is not None and len(trace) < limit:
+        trace.append(event)

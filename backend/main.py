@@ -2,6 +2,7 @@
 
 from collections.abc import Iterator
 from contextlib import contextmanager
+from dataclasses import asdict
 from pathlib import Path
 from typing import Annotated
 
@@ -9,7 +10,15 @@ from fastapi import Depends, FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
-from backend.algorithms import find_critical_points, k_shortest_paths, minimum_edge_cut
+from backend.algorithms import (
+    TraceEvent,
+    a_star,
+    bellman_ford,
+    dijkstra,
+    find_critical_points,
+    k_shortest_paths,
+    minimum_edge_cut,
+)
 from backend.graph import Network
 from backend.resilience import simulate_cascade
 from backend.schemas import (
@@ -21,10 +30,12 @@ from backend.schemas import (
     CorteMinimoRequest,
     CorteMinimoResult,
     CriticidadeResult,
+    FalhasRequest,
     GrafoState,
     NoState,
     PonteState,
     RotaAtual,
+    RotaPassosResult,
     RotaRequest,
     RotaResult,
     RotasRequest,
@@ -54,6 +65,11 @@ _ALGORITMOS: dict[AlgoritmoNome, RoutingAlgorithm] = {
     "dijkstra": "dijkstra",
     "bellman_ford": "bellman-ford",
     "a_star": "a-star",
+}
+_ALGORITMOS_COM_TRACE = {
+    "dijkstra": dijkstra,
+    "bellman_ford": bellman_ford,
+    "a_star": a_star,
 }
 
 app = FastAPI(
@@ -117,6 +133,10 @@ def status() -> StatusResponse:
 @app.get("/grafo")
 def obter_grafo(request: Request, network: NetworkDep) -> GrafoState:
     """Retorna a topologia completa com o estado corrente de nos e cabos."""
+    return _grafo_state(request, network)
+
+
+def _grafo_state(request: Request, network: Network) -> GrafoState:
     return GrafoState(
         nos=[_no_state(node.id, network) for node in network.nodes()],
         arestas=[
@@ -197,6 +217,34 @@ def calcular_rota(pedido: RotaRequest, request: Request, network: NetworkDep) ->
     return resposta
 
 
+@app.post("/rota/passos", response_model=RotaPassosResult)
+def calcular_rota_passos(pedido: RotaRequest, request: Request, network: NetworkDep):
+    """Calcula uma rota e devolve o traco limitado da execucao do algoritmo."""
+    limit = 5000
+    trace: list[TraceEvent] = []
+    with _traduz_erros():
+        calculator = _ALGORITMOS_COM_TRACE[pedido.algoritmo]
+        resultado = calculator(
+            network,
+            pedido.origem,
+            pedido.destino,
+            trace=trace,
+            max_trace_events=limit,
+        )
+    trace.append(TraceEvent("finaliza"))
+    resposta = RotaResult.from_domain(resultado, pedido.algoritmo)
+    set_route(
+        request,
+        RotaAtual(origem=pedido.origem, destino=pedido.destino, **resposta.model_dump()),
+    )
+    return RotaPassosResult(
+        rota=resposta,
+        passos=[asdict(event) for event in trace[:limit]],
+        truncado=len(trace) > limit,
+        limite=limit,
+    )
+
+
 @app.post("/rotas")
 def calcular_rotas(pedido: RotasRequest, network: NetworkDep) -> RotasResult:
     """Calcula ate k rotas alternativas simples, ordenadas por custo (algoritmo de Yen).
@@ -250,6 +298,35 @@ def restaurar_aresta_endpoint(
         estado = _aresta_state(network, cabo.origem, cabo.destino)
     _invalidar_rota(request)
     return estado
+
+
+@app.post("/simulacao/resetar", response_model=GrafoState)
+def resetar_simulacao(request: Request, network: NetworkDep) -> GrafoState:
+    """Restaura todos os elementos e limpa a rota corrente atomicamente."""
+    for node in network.nodes():
+        if not node.is_up:
+            restaurar_no(network, node.id)
+    for origin, edge in network.edges():
+        if not edge.is_up:
+            restaurar_aresta(network, origin, edge.destination)
+    set_route(request, None)
+    return _grafo_state(request, network)
+
+
+@app.post("/simulacao/falhas", response_model=GrafoState)
+def aplicar_falhas(pedido: FalhasRequest, request: Request, network: NetworkDep) -> GrafoState:
+    """Aplica um lote de falhas somente depois de validar todos os identificadores."""
+    with _traduz_erros():
+        for node_id in pedido.nos:
+            network.get_node(node_id)
+        for edge in pedido.arestas:
+            network.is_edge_up(edge.origem, edge.destino)
+        for node_id in pedido.nos:
+            derrubar_no(network, node_id)
+        for edge in pedido.arestas:
+            derrubar_aresta(network, edge.origem, edge.destino)
+    _invalidar_rota(request)
+    return _grafo_state(request, network)
 
 
 def _invalidar_rota(request: Request) -> None:

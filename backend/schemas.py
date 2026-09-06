@@ -57,6 +57,24 @@ class ArestaRequest(BaseModel):
     destino: str
 
 
+class FalhasRequest(BaseModel):
+    """Lote atomico de nos e cabos a serem derrubados."""
+
+    nos: list[str] = Field(default_factory=list)
+    arestas: list[ArestaRequest] = Field(default_factory=list)
+
+
+class TraceEventState(BaseModel):
+    """Evento de execucao devolvido pela API de animacao."""
+
+    tipo: Literal["visita", "relaxa", "descarta", "finaliza"]
+    no: str | None = None
+    origem: str | None = None
+    destino: str | None = None
+    custo: float | None = None
+    rodada: int | None = None
+
+
 class CorteMinimoRequest(BaseModel):
     """Pedido de corte minimo de cabos entre dois roteadores distintos."""
 
@@ -100,6 +118,15 @@ class RotaResult(BaseModel):
             nos_expandidos=resultado.nodes_expanded,
             arestas_relaxadas=resultado.edges_relaxed,
         )
+
+
+class RotaPassosResult(BaseModel):
+    """Resultado final e traco limitado de uma busca."""
+
+    rota: RotaResult
+    passos: list[TraceEventState]
+    truncado: bool = False
+    limite: int
 
 
 class RotasRequest(BaseModel):

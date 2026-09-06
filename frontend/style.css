@@ -261,6 +261,32 @@ h2 {
   margin-left: auto;
 }
 
+.trace-controls {
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid var(--surface-border);
+}
+
+.trace-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.7rem;
+}
+
+.trace-actions label {
+  color: var(--muted);
+  font-size: 0.76rem;
+}
+
+.trace-actions select {
+  padding: 0.4rem 0.55rem;
+  border: 1px solid var(--surface-border);
+  border-radius: 0.2rem;
+  color: #dceae2;
+  font: inherit;
+  background: rgba(10, 13, 11, 0.8);
+}
+
 .min-cut-button {
   padding: 0.5rem 0.95rem;
   border: 1px solid rgba(220, 98, 108, 0.55);

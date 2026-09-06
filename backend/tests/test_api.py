@@ -274,6 +274,40 @@ def test_rota_com_origem_igual_ao_destino_nao_e_erro(client: TestClient):
     assert response.json()["custo"] == 0.0
 
 
+def test_resetar_simulacao_devolve_grafo_integro_e_limpa_rota(client: TestClient):
+    client.post("/rota", json={"origem": "A", "destino": "D"})
+    client.post("/nos/B/derrubar")
+    client.post("/arestas/derrubar", json={"origem": "A", "destino": "C"})
+
+    response = client.post("/simulacao/resetar")
+
+    assert response.status_code == 200
+    corpo = response.json()
+    assert all(no["ativo"] for no in corpo["nos"])
+    assert all(aresta["ativo"] for aresta in corpo["arestas"])
+    assert corpo["rota_atual"] is None
+
+
+def test_aplicar_falhas_em_lote_e_atomo_em_identificador_invalido(client: TestClient):
+    response = client.post(
+        "/simulacao/falhas",
+        json={"nos": ["B"], "arestas": [{"origem": "A", "destino": "nao-existe"}]},
+    )
+
+    assert response.status_code == 404
+    assert all(no["ativo"] for no in client.get("/grafo").json()["nos"])
+
+
+def test_rota_passos_devolve_traco_e_mesmo_resultado_da_rota(client: TestClient):
+    response = client.post("/rota/passos", json={"origem": "A", "destino": "D"})
+
+    assert response.status_code == 200
+    corpo = response.json()
+    assert corpo["rota"]["caminho"] == ["A", "B", "D"]
+    assert corpo["passos"]
+    assert corpo["passos"][-1]["tipo"] == "finaliza"
+
+
 def test_clientes_tem_estado_de_falhas_isolado():
     """Uma falha e uma rota de um cliente nao afetam outro cliente."""
     app.state.network = load_network()
@@ -549,7 +583,10 @@ def test_openapi_documenta_todos_os_endpoints_tipados(client: TestClient):
         "/analise/cascata",
         "/analise/corte-minimo",
         "/rota",
+        "/rota/passos",
         "/rotas",
+        "/simulacao/resetar",
+        "/simulacao/falhas",
         "/nos/{no_id}/derrubar",
         "/nos/{no_id}/restaurar",
         "/arestas/derrubar",
