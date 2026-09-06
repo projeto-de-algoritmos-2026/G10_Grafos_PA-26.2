@@ -88,8 +88,8 @@ referência de sua fonte.
 
 O peso é calculado pela fórmula de Haversine entre as coordenadas exibidas. Portanto,
 ele não deve ser interpretado como latência, capacidade ou comprimento físico exato
-do cabo. A linha reta mostrada pela interface também não corresponde ao traçado no
-fundo do mar. A metodologia completa e todas as fontes estão em
+do cabo. O arco de grande círculo aproximado mostrado pela interface também não
+corresponde ao traçado no fundo do mar. A metodologia completa e todas as fontes estão em
 [rede-mundial.md](rede-mundial.md).
 
 O carregamento rejeita IDs e arestas duplicadas, coordenadas inválidas, self-loops,
@@ -174,11 +174,24 @@ O back-end separa a estrutura do grafo (`backend/graph.py`), os algoritmos
 de nós e cabos. O FastAPI também serve o front-end estático, portanto a demonstração
 precisa de um único processo.
 
-O front-end usa HTML, CSS e JavaScript sem framework. O `Globe.gl` posiciona os nós
-pelas coordenadas geográficas, destaca caminhos e trata cliques. Pontos e cabos comuns
-ficam menores conforme a densidade cresce, enquanto extremos e rotas selecionadas
-continuam destacados. Toda alteração relevante busca novamente o estado do grafo e
-solicita o recálculo.
+O front-end usa HTML, CSS e JavaScript sem framework. Foi escolhida a alternativa
+**Leaflet + camada de tiles** discutida na issue do mapa. Em comparação com manter o
+`vis-network` sobre um contorno estático, essa opção exigiu reescrever marcadores e
+arestas, mas entrega pan e zoom em uma projeção geográfica real. Os nós são
+`L.circleMarker` nas coordenadas WGS84 e seus rótulos aparecem somente no hover, o que
+preserva a leitura com 100 pontos.
+
+Os cabos são polilinhas amostradas por interpolação esférica, aproximando o arco de
+grande círculo. A geometria detecta saltos de longitude maiores que 180° e divide a
+linha exatamente nas bordas +180° e -180°; assim, uma ligação Tóquio–Los Angeles usa o
+caminho curto pelo Pacífico, sem atravessar o mapa inteiro. A versão 1.9.4 do Leaflet
+fica no próprio repositório. Somente os tiles do OpenStreetMap são externos: quando
+falham, o mapa-base dá lugar a uma grade neutra, mas nós, cabos, zoom, cliques e
+destaques continuam funcionando.
+
+Pontos e cabos comuns ficam menores conforme a densidade cresce, enquanto extremos e
+rotas selecionadas continuam destacados. Toda alteração relevante busca novamente o
+estado do grafo e solicita o recálculo.
 
 ## 6. Avaliação empírica
 
@@ -299,31 +312,18 @@ topologia do projeto, o mecanismo de fragilidade a ataques dirigidos.
 
 ## 7. Resultados da interface
 
-As capturas abaixo foram produzidas em 4 de setembro de 2026 com a aplicação local em
-execução. O cenário selecionou Dijkstra, origem **Las Toninas** e destino
-**Marseille**.
+A captura abaixo foi produzida em 6 de setembro de 2026 com a aplicação local em
+execução. O cenário selecionou Dijkstra, origem **Praia Grande / Santos** e destino
+**Sines / Sesimbra**. A API retornou custo de **7.959 km**, em dois saltos; a rota
+ótima aparece em amarelo sobre o Atlântico, enquanto os caminhos alternativos ficam
+mais finos. Os pontos aparecem sobre continentes reconhecíveis e os cabos do Pacífico
+são interrompidos nas bordas do mapa, demonstrando o tratamento do antimeridiano.
 
-Antes da falha, a API retornou custo de **29.690 km** e o caminho:
+![Mapa mundial com a rota entre Praia Grande e Sines](images/mapa-rota.png)
 
-```text
-Las Toninas → Punta del Este → Praia Grande → Fortaleza → Virginia Beach →
-Bilbao → Bellport → Bude → Carcavelos → Marseille
-```
-
-![Rota inicial entre Las Toninas e Marseille](images/rota-inicial.png)
-
-Depois de derrubar o nó **Carcavelos**, a interface recalculou a rota. A API retornou
-custo de **41.222 km**, substituindo o trecho por um desvio via Mumbai:
-
-```text
-Las Toninas → Punta del Este → Praia Grande → Fortaleza → Virginia Beach →
-Bilbao → Bellport → Bude → Mumbai → Marseille
-```
-
-![Rota recalculada após derrubar Carcavelos](images/rota-recalculada.png)
-
-O nó indisponível permanece desenhado em vermelho, coerente com a decisão de marcar
-o estado em vez de removê-lo fisicamente. A rota nova aparece em amarelo.
+O mesmo mapa preserva os estados de nó ativo, derrubado, origem, destino, pontos de
+articulação, pontes, corte mínimo e rota. Clicar em um marcador continua alternando a
+disponibilidade e provocando o recálculo sem recarregar a página.
 
 ## 8. Limitações e decisões em aberto
 
@@ -338,8 +338,9 @@ o estado em vez de removê-lo fisicamente. A rota nova aparece em amarelo.
   concorrência. Todos os clientes conectados ao mesmo processo compartilham o estado.
 - **Escopo de falhas na interface:** nós podem ser alternados por clique; operações de
   cabo existem na API, mas não há um controle visual equivalente na versão atual.
-- **Dependência de CDN:** a visualização requer acesso ao `Globe.gl` hospedado no
-  unpkg. Não existe cópia local para uso totalmente offline.
+- **Mapa-base externo:** os tiles cartográficos vêm do OpenStreetMap e exigem acesso à
+  internet. O Leaflet está versionado localmente e a aplicação degrada para um fundo
+  neutro sem perder topologia ou interação.
 - **Algoritmos didáticos:** a aplicação calcula menor caminho centralmente e não
   implementa protocolos distribuídos da Internet, como OSPF ou BGP.
 - **Benchmark limitado:** houve uma única máquina, sem isolamento dedicado de CPU, e
@@ -354,9 +355,10 @@ pesos são positivos, e apresenta melhor crescimento. Bellman-Ford oferece o con
 didático: produz os mesmos custos na malha válida, aceita pesos negativos e evidencia
 um pior caso muito mais caro quando a topologia força `V - 1` rodadas.
 
-As capturas confirmam o fluxo principal da aplicação: uma falha preserva o nó para
-visualização, altera o conjunto de caminhos utilizáveis e provoca um recálculo visível
-da rota. O dataset, os testes e os artefatos do benchmark permitem reproduzir tanto a
+A captura confirma que a topologia está ancorada em um mapa reconhecível, com arcos
+geodésicos e tratamento do antimeridiano. Uma falha preserva o nó para visualização,
+altera o conjunto de caminhos utilizáveis e provoca um recálculo visível da rota. O
+dataset, os testes e os artefatos do benchmark permitem reproduzir tanto a
 demonstração quanto a análise apresentada.
 
 ## Referências do projeto

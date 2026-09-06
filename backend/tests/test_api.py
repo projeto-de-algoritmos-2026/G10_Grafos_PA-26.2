@@ -44,7 +44,13 @@ def test_raiz_serve_a_interface_do_simulador(client: TestClient):
 
 @pytest.mark.parametrize(
     ("path", "content_type"),
-    [("/app.js", "text/javascript"), ("/style.css", "text/css")],
+    [
+        ("/app.js", "text/javascript"),
+        ("/map-geometry.js", "text/javascript"),
+        ("/style.css", "text/css"),
+        ("/vendor/leaflet/leaflet.js", "text/javascript"),
+        ("/vendor/leaflet/leaflet.css", "text/css"),
+    ],
 )
 def test_frontend_serve_assets_estaticos(client: TestClient, path: str, content_type: str):
     response = client.get(path)

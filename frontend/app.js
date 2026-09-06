@@ -34,13 +34,9 @@ const ROUTE_FLASH_COLOR = "#f2e6c2";
 const ROUTE_FLASH_DURATION_MS = 500;
 // Numero total de rotas pedidas ao endpoint de Yen: a melhor mais 3 de contingencia.
 const ALTERNATE_ROUTES_K = 4;
-const GLOBE_BACKGROUND_COLOR = "#080b09";
-const GLOBE_ATMOSPHERE_COLOR = "#6fb98a";
-// Os cabos sao submarinos: um arco baixo acompanha a curvatura do globo em vez
-// de disparar para fora dele, o que deixava as ligacoes longas soltas no espaco.
-const ARC_ALTITUDE_AUTO_SCALE = 0.12;
-const COUNTRIES_GEOJSON_URL =
-  "https://unpkg.com/globe.gl@2.27.1/example/datasets/ne_110m_admin_0_countries.geojson";
+const TILE_URL = "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png";
+const EMPTY_TILE =
+  "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='256' height='256'/%3E";
 const COLORS = {
   node: "#6fb98a",
   down: "#cf7a72",
@@ -54,15 +50,16 @@ const COLORS = {
   articulation: "#d2a24c",
   bridge: "#d2a24c",
   minCut: "#dc626c",
-  landFill: "rgba(111, 185, 138, 0.09)",
-  landStroke: "rgba(125, 175, 145, 0.42)",
 };
 
-let globeInstance;
+let mapInstance;
+let tileLayer;
+let cableLayer;
+let articulationLayer;
+let nodeLayer;
 let resizeObserver;
 let currentGraph;
 let currentCriticidade = { articulacoes: [], pontes: [], componentes: 0 };
-let countryFeatures = [];
 let flashedEdgeIds = new Set();
 // Rotas 2..k devolvidas por /rotas (a melhor fica de fora, ja coberta por rota_atual).
 let currentAlternateRoutes = [];
@@ -144,61 +141,9 @@ function pointColorFor(node, route) {
   return COLORS.node;
 }
 
-function buildGridTexture() {
-  const canvas = document.createElement("canvas");
-  canvas.width = 1024;
-  canvas.height = 512;
-  const ctx = canvas.getContext("2d");
-
-  ctx.fillStyle = "#0b120e";
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-  ctx.strokeStyle = "rgba(125, 175, 145, 0.16)";
-  ctx.lineWidth = 1;
-  const step = 32;
-  for (let x = 0; x <= canvas.width; x += step) {
-    ctx.beginPath();
-    ctx.moveTo(x, 0);
-    ctx.lineTo(x, canvas.height);
-    ctx.stroke();
-  }
-  for (let y = 0; y <= canvas.height; y += step) {
-    ctx.beginPath();
-    ctx.moveTo(0, y);
-    ctx.lineTo(canvas.width, y);
-    ctx.stroke();
-  }
-
-  ctx.strokeStyle = "rgba(125, 175, 145, 0.34)";
-  ctx.lineWidth = 2;
-  ctx.beginPath();
-  ctx.moveTo(0, canvas.height / 2);
-  ctx.lineTo(canvas.width, canvas.height / 2);
-  ctx.stroke();
-
-  return canvas.toDataURL("image/png");
-}
-
-async function fetchCountries() {
-  // Os contornos sao apenas referencia visual: se a CDN falhar, o globo
-  // continua funcional sem eles em vez de derrubar a visualizacao inteira.
-  try {
-    const response = await fetch(COUNTRIES_GEOJSON_URL);
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}`);
-    }
-    const geojson = await response.json();
-    return geojson.features ?? [];
-  } catch (error) {
-    console.warn("Contornos dos continentes indisponíveis:", error);
-    return [];
-  }
-}
-
-function toGlobePoints(graph) {
+function toMapPoints(graph) {
   const articulationPoints = articulationPointIds();
-  // Reduz pontos comuns conforme a malha cresce; extremos continuam grandes.
-  const regularRadius = Math.max(0.18, 0.35 * Math.sqrt(26 / graph.nos.length));
+  const regularRadius = Math.max(3, 5 * Math.sqrt(26 / graph.nos.length));
 
   return graph.nos.map((node) => {
     const route = graph.rota_atual;
@@ -213,18 +158,12 @@ function toGlobePoints(graph) {
       ativo: node.ativo,
       isArticulation,
       color: pointColorFor(node, route),
-      radius: isEndpoint ? 0.55 : regularRadius,
+      radius: isEndpoint ? 7 : regularRadius,
     };
   });
 }
 
-function toGlobeRings(points) {
-  return points
-    .filter((point) => point.isArticulation && point.ativo)
-    .map((point) => ({ lat: point.lat, lng: point.lng }));
-}
-
-function toGlobeArcs(graph) {
+function toMapCables(graph) {
   const nodesById = new Map(graph.nos.map((node) => [node.id, node]));
   const routeEdges = currentRouteEdges(graph.rota_atual);
   const bridgeEdges = bridgeEdgeIds();
@@ -270,32 +209,21 @@ function toGlobeArcs(graph) {
         color = "#e0c07a";
       }
 
-      // Tracos curtos: um padrao longo deixaria so dois segmentos por arco, que
-      // a distancia parecem riscos soltos em vez de um cabo pontilhado.
-      let dashLength = 1;
-      let dashGap = 0;
-      let dashAnimateTime = 0;
-      if (isMinCut) {
-        dashLength = 1;
-        dashGap = 0;
-      } else if (belongsToRoute || isFlashed) {
-        dashLength = 0.3;
-        dashGap = 0.12;
-        dashAnimateTime = 1600;
-      } else if (!edge.ativo) {
-        dashLength = 0.06;
-        dashGap = 0.05;
-      } else if (isBridge) {
-        dashLength = 0.05;
-        dashGap = 0.035;
-      }
+      const dashArray = !edge.ativo ? "4 6" : isBridge ? "2 5" : null;
+      const priority = isMinCut
+        ? 5
+        : isFlashed
+          ? 4
+          : belongsToRoute
+            ? 3
+            : alternate
+              ? 2
+              : isBridge
+                ? 1
+                : 0;
 
       return {
         id,
-        startLat: origin.lat,
-        startLng: origin.lon,
-        endLat: destination.lat,
-        endLng: destination.lon,
         cabo: edge.cabo,
         peso: edge.peso,
         ativo: edge.ativo,
@@ -304,19 +232,22 @@ function toGlobeArcs(graph) {
         alternateRank: alternate?.rank,
         alternateCusto: alternate?.custo,
         color,
-        // Rota alternativa fica visivelmente mais fina e apagada, atras da rota otima.
-        stroke: isMinCut
-          ? 0.7
+        segments: window.MapGeometry.greatCircleSegments(
+          { lat: origin.lat, lng: origin.lon },
+          { lat: destination.lat, lng: destination.lon },
+        ),
+        weight: isMinCut
+          ? 5
           : belongsToRoute || isFlashed
-            ? 0.55
+            ? 4
             : alternate
-              ? 0.16
+              ? 1
               : isBridge
-                ? 0.38
-                : 0.25 * densityScale,
-        dashLength,
-        dashGap,
-        dashAnimateTime,
+                ? 2.5
+                : Math.max(1, 1.6 * densityScale),
+        opacity: alternate ? 0.45 : edge.ativo ? 0.82 : 0.62,
+        dashArray,
+        priority,
       };
     })
     .filter(Boolean);
@@ -328,16 +259,16 @@ function pointLabel(point) {
   }${point.isArticulation ? "<br>Ponto de articulação" : ""}`;
 }
 
-function arcLabel(arc) {
-  const alternateInfo = arc.alternateRank
-    ? `<br>Rota alternativa #${arc.alternateRank} · ${Math.round(arc.alternateCusto).toLocaleString(
+function cableLabel(cable) {
+  const alternateInfo = cable.alternateRank
+    ? `<br>Rota alternativa #${cable.alternateRank} · ${Math.round(cable.alternateCusto).toLocaleString(
         "pt-BR",
       )} km`
     : "";
-  return `${arc.cabo}<br>${Math.round(arc.peso).toLocaleString("pt-BR")} km<br>${
-    arc.ativo ? "Ativa" : "Derrubada"
-  }${arc.isBridge ? "<br>Ponte (ponto único de falha)" : ""}${
-    arc.isMinCut ? "<br>Parte do corte mínimo calculado" : ""
+  return `${cable.cabo}<br>${Math.round(cable.peso).toLocaleString("pt-BR")} km<br>${
+    cable.ativo ? "Ativa" : "Derrubada"
+  }${cable.isBridge ? "<br>Ponte (ponto único de falha)" : ""}${
+    cable.isMinCut ? "<br>Parte do corte mínimo calculado" : ""
   }${alternateInfo}`;
 }
 
@@ -384,90 +315,136 @@ function redundancyText() {
   return `Redundância do par: a 2ª melhor rota (algoritmo de Yen) custa ${percent}% a mais que a ótima.`;
 }
 
-function averageCoordinates(nodes) {
-  if (!nodes.length) {
-    return { lat: 0, lng: 0 };
-  }
-  const total = nodes.reduce(
-    (acc, node) => ({ lat: acc.lat + node.lat, lng: acc.lng + node.lon }),
-    { lat: 0, lng: 0 },
-  );
-  return { lat: total.lat / nodes.length, lng: total.lng / nodes.length };
-}
-
-function resizeGlobe() {
-  if (!globeInstance) {
+function resizeMap() {
+  if (!mapInstance) {
     return;
   }
-  globeInstance.width(elements.network.clientWidth);
-  globeInstance.height(elements.network.clientHeight);
+  mapInstance.invalidateSize({ animate: false });
 }
 
-function buildGlobe(graph) {
-  if (typeof window.Globe !== "function") {
+function setTileStatus(available) {
+  elements.network.classList.toggle("network-canvas-offline", !available);
+  elements.libraryStatus.textContent = available
+    ? "Leaflet · mapa carregado"
+    : "Leaflet · modo sem tiles";
+}
+
+function buildMap(graph) {
+  if (typeof window.L?.map !== "function" || !window.MapGeometry) {
     throw new Error("A biblioteca de visualização não pôde ser carregada.");
   }
 
-  elements.network.innerHTML = "";
-
-  globeInstance = window
-    .Globe()(elements.network)
-    .width(elements.network.clientWidth)
-    .height(elements.network.clientHeight)
-    .backgroundColor(GLOBE_BACKGROUND_COLOR)
-    .globeImageUrl(buildGridTexture())
-    .showAtmosphere(true)
-    .atmosphereColor(GLOBE_ATMOSPHERE_COLOR)
-    .atmosphereAltitude(0.14)
-    .polygonsData(countryFeatures)
-    .polygonCapColor(() => COLORS.landFill)
-    .polygonSideColor(() => "rgba(0, 0, 0, 0)")
-    .polygonStrokeColor(() => COLORS.landStroke)
-    .polygonAltitude(0.006)
-    .polygonLabel(() => "")
-    .polygonsTransitionDuration(0)
-    .pointsMerge(false)
-    .pointAltitude(0.012)
-    .pointRadius((point) => point.radius)
-    .pointColor((point) => point.color)
-    .pointLabel(pointLabel)
-    .pointsTransitionDuration(200)
-    .onPointClick((point) => toggleNode(point.id))
-    .arcsTransitionDuration(0)
-    .arcAltitudeAutoScale(ARC_ALTITUDE_AUTO_SCALE)
-    .arcColor((arc) => arc.color)
-    .arcStroke((arc) => arc.stroke)
-    .arcDashLength((arc) => arc.dashLength)
-    .arcDashGap((arc) => arc.dashGap)
-    .arcDashAnimateTime((arc) => arc.dashAnimateTime)
-    .arcLabel(arcLabel)
-    .ringColor(() => (t) => `rgba(255, 153, 0, ${1 - t})`)
-    .ringMaxRadius(3.4)
-    .ringPropagationSpeed(2.2)
-    .ringRepeatPeriod(1500);
-
-  globeInstance.controls().autoRotate = true;
-  globeInstance.controls().autoRotateSpeed = 0.35;
-  globeInstance.controls().enableDamping = true;
-
-  const { lat, lng } = averageCoordinates(graph.nos);
-  globeInstance.pointOfView({ lat, lng, altitude: 1.85 }, 0);
-
-  updateGlobe(graph);
-
   resizeObserver?.disconnect();
+  mapInstance?.remove();
+  elements.network.innerHTML = "";
+  mapInstance = window.L.map(elements.network, {
+    minZoom: 1,
+    maxZoom: 10,
+    maxBounds: [
+      [-85, -180],
+      [85, 180],
+    ],
+    maxBoundsViscosity: 1,
+    preferCanvas: true,
+    worldCopyJump: false,
+  });
+
+  window.L.control.scale({ imperial: false, position: "bottomleft" }).addTo(mapInstance);
+  tileLayer = window.L.tileLayer(TILE_URL, {
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+    errorTileUrl: EMPTY_TILE,
+    maxZoom: 10,
+    noWrap: true,
+  });
+  let loadedTiles = 0;
+  tileLayer.on("loading", () => {
+    loadedTiles = 0;
+  });
+  elements.libraryStatus.textContent = "Leaflet · carregando mapa";
+  tileLayer.on("tileload", (event) => {
+    if (!event.tile.src.startsWith("data:")) {
+      loadedTiles += 1;
+    }
+  });
+  tileLayer.on("load", () => setTileStatus(loadedTiles > 0));
+  tileLayer.on("tileerror", () => {
+    setTileStatus(false);
+  });
+  tileLayer.addTo(mapInstance);
+
+  cableLayer = window.L.layerGroup().addTo(mapInstance);
+  articulationLayer = window.L.layerGroup().addTo(mapInstance);
+  nodeLayer = window.L.layerGroup().addTo(mapInstance);
+
+  const bounds = window.L.latLngBounds(graph.nos.map((node) => [node.lat, node.lon]));
+  mapInstance.fitBounds(bounds, { animate: false, maxZoom: 3, padding: [24, 24] });
+  updateMap(graph);
+
   if (window.ResizeObserver) {
-    resizeObserver = new ResizeObserver(resizeGlobe);
+    resizeObserver = new ResizeObserver(resizeMap);
     resizeObserver.observe(elements.network);
   }
 }
 
-function updateGlobe(graph) {
-  const points = toGlobePoints(graph);
-  globeInstance
-    .pointsData(points)
-    .arcsData(toGlobeArcs(graph))
-    .ringsData(toGlobeRings(points));
+function updateMap(graph) {
+  if (!mapInstance) {
+    return;
+  }
+
+  cableLayer.clearLayers();
+  articulationLayer.clearLayers();
+  nodeLayer.clearLayers();
+
+  toMapCables(graph)
+    .sort((first, second) => first.priority - second.priority)
+    .forEach((cable) => {
+      cable.segments.forEach((segment) => {
+        window.L.polyline(
+          segment.map((point) => [point.lat, point.lng]),
+          {
+            color: cable.color,
+            dashArray: cable.dashArray,
+            interactive: true,
+            opacity: cable.opacity,
+            smoothFactor: 0.5,
+            weight: cable.weight,
+          },
+        )
+          .bindTooltip(cableLabel(cable), { className: "map-tooltip", sticky: true })
+          .addTo(cableLayer);
+      });
+    });
+
+  toMapPoints(graph).forEach((point) => {
+    if (point.isArticulation && point.ativo) {
+      window.L.circleMarker([point.lat, point.lng], {
+        className: "articulation-ring",
+        color: COLORS.articulation,
+        fill: false,
+        interactive: false,
+        opacity: 0.9,
+        radius: point.radius + 5,
+        weight: 2,
+      }).addTo(articulationLayer);
+    }
+
+    window.L.circleMarker([point.lat, point.lng], {
+      bubblingMouseEvents: false,
+      className: "network-node",
+      color: point.isArticulation ? COLORS.articulation : "#dceae2",
+      fillColor: point.color,
+      fillOpacity: 1,
+      radius: point.radius,
+      weight: point.isArticulation ? 2.5 : 1.2,
+    })
+      .bindTooltip(pointLabel(point), {
+        className: "map-tooltip",
+        direction: "top",
+        offset: [0, -5],
+      })
+      .on("click", () => toggleNode(point.id))
+      .addTo(nodeLayer);
+  });
 }
 
 function flashRouteEdges(edgeIds) {
@@ -475,10 +452,10 @@ function flashRouteEdges(edgeIds) {
     return;
   }
   flashedEdgeIds = new Set(edgeIds);
-  updateGlobe(currentGraph);
+  updateMap(currentGraph);
   window.setTimeout(() => {
     flashedEdgeIds = new Set();
-    updateGlobe(currentGraph);
+    updateMap(currentGraph);
   }, ROUTE_FLASH_DURATION_MS);
 }
 
@@ -558,7 +535,7 @@ async function refreshRoute() {
 async function recalculateAndRender() {
   const previousRouteEdges = await refreshRoute();
   await loadTrace();
-  updateGlobe(currentGraph);
+  updateMap(currentGraph);
   renderRouteSummary(currentGraph);
   renderCriticalitySummary();
 
@@ -642,7 +619,7 @@ async function calculateMinimumCut() {
       currentMinCut.arestas.map((edge) => edgeKey(edge.origem, edge.destino)),
     );
     renderMinimumCut();
-    updateGlobe(currentGraph);
+    updateMap(currentGraph);
   } catch (error) {
     showActionError(error);
   }
@@ -680,52 +657,60 @@ async function resetSimulation() {
   } catch (error) {
     showActionError(error);
   }
+}
 
-  async function loadTrace() {
-    if (!currentSelection.origem || !currentSelection.destino) return;
-    const response = await fetch("/rota/passos", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(currentSelection),
-    });
-    if (!response.ok) throw new Error(`A API respondeu com HTTP ${response.status}.`);
-    const payload = await response.json();
-    currentTrace = payload.passos;
+async function loadTrace() {
+  if (!currentSelection.origem || !currentSelection.destino) {
+    currentTrace = [];
     currentTraceIndex = 0;
     traceEvent = null;
-    elements.tracePlayButton.disabled = currentTrace.length === 0;
-    elements.traceStepButton.disabled = currentTrace.length === 0;
-    elements.traceStatus.textContent = `${currentTrace.length} passos carregados${payload.truncado ? " (limite atingido)" : ""}.`;
-    updateGlobe(currentGraph);
+    elements.tracePlayButton.disabled = true;
+    elements.traceStepButton.disabled = true;
+    elements.traceStatus.textContent = "Calcule uma rota para carregar o traço.";
+    return;
   }
+  const response = await fetch("/rota/passos", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(currentSelection),
+  });
+  if (!response.ok) throw new Error(`A API respondeu com HTTP ${response.status}.`);
+  const payload = await response.json();
+  currentTrace = payload.passos;
+  currentTraceIndex = 0;
+  traceEvent = null;
+  elements.tracePlayButton.disabled = currentTrace.length === 0;
+  elements.traceStepButton.disabled = currentTrace.length === 0;
+  elements.traceStatus.textContent = `${currentTrace.length} passos carregados${payload.truncado ? " (limite atingido)" : ""}.`;
+  updateMap(currentGraph);
+}
 
-  function applyTraceStep() {
-    if (currentTraceIndex >= currentTrace.length) {
-      clearInterval(traceTimer);
-      traceTimer = undefined;
-      elements.tracePlayButton.textContent = "Reproduzir";
-      return;
-    }
-    traceEvent = currentTrace[currentTraceIndex];
-    currentTraceIndex += 1;
-    elements.traceStatus.textContent = `Passo ${currentTraceIndex}/${currentTrace.length}: ${traceEvent.tipo}`;
-    updateGlobe(currentGraph);
+function applyTraceStep() {
+  if (currentTraceIndex >= currentTrace.length) {
+    clearInterval(traceTimer);
+    traceTimer = undefined;
+    elements.tracePlayButton.textContent = "Reproduzir";
+    return;
   }
+  traceEvent = currentTrace[currentTraceIndex];
+  currentTraceIndex += 1;
+  elements.traceStatus.textContent = `Passo ${currentTraceIndex}/${currentTrace.length}: ${traceEvent.tipo}`;
+  updateMap(currentGraph);
+}
 
-  function toggleTracePlayback() {
-    if (traceTimer) {
-      clearInterval(traceTimer);
-      traceTimer = undefined;
-      elements.tracePlayButton.textContent = "Reproduzir";
-      return;
-    }
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      while (currentTraceIndex < currentTrace.length) applyTraceStep();
-      return;
-    }
-    elements.tracePlayButton.textContent = "Pausar";
-    traceTimer = window.setInterval(applyTraceStep, Number(elements.traceSpeed.value));
+function toggleTracePlayback() {
+  if (traceTimer) {
+    clearInterval(traceTimer);
+    traceTimer = undefined;
+    elements.tracePlayButton.textContent = "Reproduzir";
+    return;
   }
+  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    while (currentTraceIndex < currentTrace.length) applyTraceStep();
+    return;
+  }
+  elements.tracePlayButton.textContent = "Pausar";
+  traceTimer = window.setInterval(applyTraceStep, Number(elements.traceSpeed.value));
 }
 
 function bindControls() {
@@ -806,7 +791,7 @@ function showGraph(graph) {
   currentSelection.destino = graph.rota_atual?.destino ?? currentSelection.destino;
   currentSelection.algoritmo = graph.rota_atual?.algoritmo ?? currentSelection.algoritmo;
 
-  buildGlobe(graph);
+  buildMap(graph);
   populateEndpointSelects(graph);
   setAlgorithm(currentSelection.algoritmo);
   updateMinCutButton();
@@ -815,7 +800,6 @@ function showGraph(graph) {
   renderCriticalitySummary();
   elements.nodeCount.textContent = graph.nos.length;
   elements.edgeCount.textContent = graph.arestas.length;
-  elements.libraryStatus.textContent = "globe.gl ativo";
   elements.status.textContent = "API conectada";
   elements.status.className = "status status-success";
   elements.error.hidden = true;
@@ -829,7 +813,8 @@ function showLoadError(error) {
   elements.error.textContent = `Não foi possível carregar a topologia. ${error.message}`;
   elements.error.hidden = false;
   resizeObserver?.disconnect();
-  globeInstance = undefined;
+  mapInstance?.remove();
+  mapInstance = undefined;
   elements.network.setAttribute("aria-busy", "false");
   elements.network.innerHTML = `
     <div class="network-placeholder">
@@ -868,14 +853,9 @@ async function fetchCriticidade() {
 
 async function initialize() {
   try {
-    const [graph, criticidade, countries] = await Promise.all([
-      fetchGraph(),
-      fetchCriticidade(),
-      fetchCountries(),
-    ]);
+    const [graph, criticidade] = await Promise.all([fetchGraph(), fetchCriticidade()]);
     console.info("Grafo recebido da API:", graph);
     currentCriticidade = criticidade;
-    countryFeatures = countries;
     showGraph(graph);
   } catch (error) {
     showLoadError(error);

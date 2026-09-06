@@ -5,14 +5,19 @@ JavaScript puro e consumindo a API FastAPI do `backend/`.
 
 ## Decisões técnicas
 
-### Visualização com Globe.gl
+### Visualização com Leaflet
 
-Foi escolhida a biblioteca [`Globe.gl`](https://globe.gl/) para posicionar a malha
-pelas coordenadas WGS84 em um globo 3D e oferecer eventos de clique e seleção sem um
-pipeline de build.
+Entre as duas alternativas avaliadas na issue do mapa, foi escolhida a primeira:
+[`Leaflet`](https://leafletjs.com/) com uma camada de tiles do OpenStreetMap. Ela
+oferece projeção Web Mercator, pan e zoom geográficos, além de posicionar os
+`L.circleMarker` diretamente nas coordenadas WGS84. A reescrita da camada de desenho
+foi preferida ao fundo estático do `vis-network` porque o zoom continua correto e
+permite inspecionar regiões densas sem deslocar os nós de sua posição real.
 
-A versão `2.27.1` é carregada por CDN, sem npm ou bundler, mantendo a configuração
-compatível com o escopo acadêmico do projeto.
+A versão estável 1.9.4 está copiada em `frontend/vendor/leaflet/`, com sua licença.
+Assim, apenas as imagens do mapa dependem de rede externa. Se elas não estiverem
+disponíveis, o Leaflet, os nós, os cabos e todos os controles continuam funcionando
+sobre uma grade neutra; a interface identifica esse estado como `modo sem tiles`.
 
 ### Arquivos estáticos pelo FastAPI
 
@@ -37,10 +42,15 @@ requisição falhar, uma mensagem de erro é apresentada na própria interface.
 
 ## Visualização da topologia
 
-Os nós usam latitude e longitude diretamente no globo. Seus nomes aparecem sob
-ponteiro, evitando 100 rótulos simultâneos; o zoom e a rotação permitem inspecionar
-regiões densas. O raio dos pontos comuns e a espessura dos cabos diminuem conforme o
-dataset cresce, enquanto origem, destino, rotas e cortes mantêm destaque próprio.
+Os nós usam latitude e longitude diretamente no mapa. Seus nomes aparecem no hover,
+evitando 100 rótulos simultâneos; zoom e pan permitem inspecionar regiões densas. O
+raio dos pontos comuns e a espessura dos cabos diminuem conforme o dataset cresce,
+enquanto origem, destino, rotas e cortes mantêm destaque próprio.
+
+Cada cabo é amostrado por interpolação esférica, formando uma aproximação de grande
+círculo em vez de um segmento reto. Quando pontos consecutivos passam de +180° para
+-180° (ou no sentido contrário), a polilinha é dividida nas duas bordas do mapa. Isso
+faz conexões transpacíficas seguirem o caminho curto sem cruzar toda a tela.
 
 As conexões mostram o nome do cabo, a distância e o estado em um tooltip. A
 última rota calculada por `POST /rota` é retornada junto de `GET /grafo` e aparece
