@@ -323,6 +323,14 @@ h2 {
   font-weight: 700;
 }
 
+#route-redundancy {
+  grid-column: 1 / -1;
+}
+
+#route-redundancy:empty {
+  display: none;
+}
+
 .network-hint {
   margin: 0;
   padding: 0.55rem 1.5rem 0;
@@ -456,6 +464,11 @@ h2 {
 .legend-edge-bridge {
   border-color: var(--warning);
   border-top-style: dotted;
+}
+
+.legend-edge-alternative {
+  border-top-width: 1px;
+  border-color: rgba(224, 192, 122, 0.55);
 }
 
 .loading-indicator {

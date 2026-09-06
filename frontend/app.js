@@ -8,6 +8,7 @@ const elements = {
   libraryStatus: document.querySelector("#library-status"),
   routeDescription: document.querySelector("#route-description"),
   routeDetails: document.querySelector("#route-details"),
+  routeRedundancy: document.querySelector("#route-redundancy"),
   criticalityDetails: document.querySelector("#criticality-details"),
   originSelect: document.querySelector("#origin-select"),
   destinationSelect: document.querySelector("#destination-select"),
@@ -18,6 +19,8 @@ const elements = {
 
 const ROUTE_FLASH_COLOR = "#f2e6c2";
 const ROUTE_FLASH_DURATION_MS = 500;
+// Numero total de rotas pedidas ao endpoint de Yen: a melhor mais 3 de contingencia.
+const ALTERNATE_ROUTES_K = 4;
 const GLOBE_BACKGROUND_COLOR = "#080b09";
 const GLOBE_ATMOSPHERE_COLOR = "#6fb98a";
 // Os cabos sao submarinos: um arco baixo acompanha a curvatura do globo em vez
@@ -34,6 +37,7 @@ const COLORS = {
   edge: "#3f7a5c",
   edgeDown: "#6b3b38",
   route: "#e0c07a",
+  alternateRoute: "rgba(224, 192, 122, 0.4)",
   articulation: "#d2a24c",
   bridge: "#d2a24c",
   landFill: "rgba(111, 185, 138, 0.09)",
@@ -46,6 +50,9 @@ let currentGraph;
 let currentCriticidade = { articulacoes: [], pontes: [], componentes: 0 };
 let countryFeatures = [];
 let flashedEdgeIds = new Set();
+// Rotas 2..k devolvidas por /rotas (a melhor fica de fora, ja coberta por rota_atual).
+let currentAlternateRoutes = [];
+let currentRedundancyPercent = null;
 
 const currentSelection = {
   origem: null,
@@ -69,6 +76,22 @@ function currentRouteEdges(route) {
   }
 
   return edges;
+}
+
+function alternateRouteEdgeInfo(routes) {
+  const info = new Map();
+
+  routes.forEach((route, offset) => {
+    const rank = offset + 2; // a melhor rota (rank 1) nao entra em `routes`.
+    for (let index = 0; index < route.caminho.length - 1; index += 1) {
+      const id = edgeKey(route.caminho[index], route.caminho[index + 1]);
+      if (!info.has(id)) {
+        info.set(id, { rank, custo: route.custo });
+      }
+    }
+  });
+
+  return info;
 }
 
 function articulationPointIds() {
@@ -180,6 +203,7 @@ function toGlobeArcs(graph) {
   const nodesById = new Map(graph.nos.map((node) => [node.id, node]));
   const routeEdges = currentRouteEdges(graph.rota_atual);
   const bridgeEdges = bridgeEdgeIds();
+  const alternateEdges = alternateRouteEdgeInfo(currentAlternateRoutes);
 
   return graph.arestas
     .map((edge) => {
@@ -193,10 +217,14 @@ function toGlobeArcs(graph) {
       const belongsToRoute = routeEdges.has(id);
       const isBridge = bridgeEdges.has(id);
       const isFlashed = flashedEdgeIds.has(id);
+      const alternate = belongsToRoute ? undefined : alternateEdges.get(id);
 
       let color = edge.ativo ? COLORS.edge : COLORS.edgeDown;
       if (isBridge) {
         color = COLORS.bridge;
+      }
+      if (alternate) {
+        color = COLORS.alternateRoute;
       }
       if (belongsToRoute) {
         color = COLORS.route;
@@ -232,8 +260,11 @@ function toGlobeArcs(graph) {
         peso: edge.peso,
         ativo: edge.ativo,
         isBridge,
+        alternateRank: alternate?.rank,
+        alternateCusto: alternate?.custo,
         color,
-        stroke: belongsToRoute || isFlashed ? 0.55 : isBridge ? 0.38 : 0.25,
+        // Rota alternativa fica visivelmente mais fina e apagada, atras da rota otima.
+        stroke: belongsToRoute || isFlashed ? 0.55 : alternate ? 0.16 : isBridge ? 0.38 : 0.25,
         dashLength,
         dashGap,
         dashAnimateTime,
@@ -249,14 +280,20 @@ function pointLabel(point) {
 }
 
 function arcLabel(arc) {
+  const alternateInfo = arc.alternateRank
+    ? `<br>Rota alternativa #${arc.alternateRank} · ${Math.round(arc.alternateCusto).toLocaleString(
+        "pt-BR",
+      )} km`
+    : "";
   return `${arc.cabo}<br>${Math.round(arc.peso).toLocaleString("pt-BR")} km<br>${
     arc.ativo ? "Ativa" : "Derrubada"
-  }${arc.isBridge ? "<br>Ponte (ponto único de falha)" : ""}`;
+  }${arc.isBridge ? "<br>Ponte (ponto único de falha)" : ""}${alternateInfo}`;
 }
 
 function renderRouteSummary(graph) {
   const route = graph.rota_atual;
   elements.routeDetails.classList.remove("route-details-warning");
+  elements.routeRedundancy.textContent = "";
 
   if (!route) {
     elements.routeDescription.textContent = "Nenhuma rota selecionada.";
@@ -281,6 +318,17 @@ function renderRouteSummary(graph) {
   elements.routeDetails.textContent = `${algorithm} · ${cost} km · ${hops} ${
     hops === 1 ? "salto" : "saltos"
   }`;
+  elements.routeRedundancy.textContent = redundancyText();
+}
+
+function redundancyText() {
+  if (currentRedundancyPercent === null) {
+    return currentAlternateRoutes.length === 0
+      ? "Sem rota de contingência: este par não tem caminho alternativo simples."
+      : "";
+  }
+  const percent = currentRedundancyPercent.toLocaleString("pt-BR", { maximumFractionDigits: 1 });
+  return `Redundância do par: a 2ª melhor rota (algoritmo de Yen) custa ${percent}% a mais que a ótima.`;
 }
 
 function averageCoordinates(nodes) {
@@ -404,32 +452,52 @@ async function toggleNode(nodeId) {
   }
 }
 
+async function fetchAlternateRoutes(origem, destino) {
+  const response = await fetch("/rotas", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ origem, destino, k: ALTERNATE_ROUTES_K }),
+  });
+  if (!response.ok) {
+    throw new Error(`A API respondeu com HTTP ${response.status}.`);
+  }
+  return response.json();
+}
+
 async function refreshRoute() {
   const previousRouteEdges = currentRouteEdges(currentGraph.rota_atual);
 
   if (!currentSelection.origem || !currentSelection.destino) {
     currentGraph.rota_atual = null;
+    currentAlternateRoutes = [];
+    currentRedundancyPercent = null;
     return previousRouteEdges;
   }
 
-  const response = await fetch("/rota", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      origem: currentSelection.origem,
-      destino: currentSelection.destino,
-      algoritmo: currentSelection.algoritmo,
+  const [rotaResponse, rotas] = await Promise.all([
+    fetch("/rota", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        origem: currentSelection.origem,
+        destino: currentSelection.destino,
+        algoritmo: currentSelection.algoritmo,
+      }),
     }),
-  });
-  if (!response.ok) {
-    throw new Error(`A API respondeu com HTTP ${response.status}.`);
+    fetchAlternateRoutes(currentSelection.origem, currentSelection.destino),
+  ]);
+  if (!rotaResponse.ok) {
+    throw new Error(`A API respondeu com HTTP ${rotaResponse.status}.`);
   }
-  const rota = await response.json();
+  const rota = await rotaResponse.json();
   currentGraph.rota_atual = {
     origem: currentSelection.origem,
     destino: currentSelection.destino,
     ...rota,
   };
+  // A melhor rota (rank 1) ja e desenhada por rota_atual; so as demais entram como alternativas.
+  currentAlternateRoutes = rotas.rotas.slice(1);
+  currentRedundancyPercent = rotas.redundancia_percentual;
   return previousRouteEdges;
 }
 

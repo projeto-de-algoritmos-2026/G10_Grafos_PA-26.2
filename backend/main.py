@@ -9,7 +9,7 @@ from fastapi import Depends, FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
-from backend.algorithms import find_critical_points
+from backend.algorithms import find_critical_points, k_shortest_paths
 from backend.graph import Network
 from backend.schemas import (
     AlgoritmoNome,
@@ -22,6 +22,8 @@ from backend.schemas import (
     RotaAtual,
     RotaRequest,
     RotaResult,
+    RotasRequest,
+    RotasResult,
     StatusResponse,
 )
 from backend.simulation import (
@@ -132,6 +134,19 @@ def calcular_rota(pedido: RotaRequest, request: Request, network: NetworkDep) ->
         **resposta.model_dump(),
     )
     return resposta
+
+
+@app.post("/rotas")
+def calcular_rotas(pedido: RotasRequest, network: NetworkDep) -> RotasResult:
+    """Calcula ate k rotas alternativas simples, ordenadas por custo (algoritmo de Yen).
+
+    A diferenca percentual entre a 2a melhor rota e a melhor mede a
+    redundancia do par. Rede particionada nao e erro: devolve 200 com lista
+    vazia e ``encontrada=False``, como em ``/rota``.
+    """
+    with _traduz_erros():
+        resultados = k_shortest_paths(network, pedido.origem, pedido.destino, pedido.k)
+    return RotasResult.from_domain(pedido.origem, pedido.destino, resultados)
 
 
 @app.post("/nos/{no_id}/derrubar")
