@@ -10,7 +10,7 @@ from pydantic import BaseModel, ConfigDict, Field, HttpUrl, model_validator
 
 EARTH_RADIUS_KM = 6371.0088
 MIN_NODES = 15
-MAX_NODES = 30
+MAX_NODES = 2_000
 WEIGHT_TOLERANCE_KM = 1.0
 
 

@@ -6,7 +6,7 @@
     "sistema_coordenadas": "WGS84",
     "metodologia_peso": "Distância geodésica Haversine entre as coordenadas exibidas, arredondada ao quilômetro.",
     "semantica_aresta": "Conectividade lógica entre áreas atendidas pelo mesmo sistema real; não representa o traçado físico exato do cabo.",
-    "consultado_em": "2026-08-30",
+    "consultado_em": "2026-09-06",
     "fontes": {
       "geonames": {
         "nome": "GeoNames",
@@ -94,67 +94,2311 @@
         "nome": "TeleGeography — Africa Coast to Europe",
         "url": "https://www.submarinecablemap.com/submarine-cable/africa-coast-to-europe-ace",
         "uso": "Landing points e estado em serviço do sistema ACE."
+      },
+      "wacs": {
+        "nome": "TeleGeography — WACS",
+        "url": "https://www.submarinecablemap.com/submarine-cable/west-africa-cable-system-wacs",
+        "uso": "Landing points do West Africa Cable System."
+      },
+      "equiano": {
+        "nome": "TeleGeography — Equiano",
+        "url": "https://www.submarinecablemap.com/submarine-cable/equiano",
+        "uso": "Landing points do sistema Equiano."
+      },
+      "eassy": {
+        "nome": "TeleGeography — EASSy",
+        "url": "https://www.submarinecablemap.com/submarine-cable/eastern-africa-submarine-system-eassy",
+        "uso": "Landing points do Eastern Africa Submarine System."
+      },
+      "seamewe-5": {
+        "nome": "TeleGeography — SeaMeWe-5",
+        "url": "https://www.submarinecablemap.com/submarine-cable/seamewe-5",
+        "uso": "Landing points do sistema SeaMeWe-5."
+      },
+      "adc": {
+        "nome": "TeleGeography — Asia Direct Cable",
+        "url": "https://www.submarinecablemap.com/submarine-cable/asia-direct-cable-adc",
+        "uso": "Landing points do Asia Direct Cable."
+      },
+      "aag": {
+        "nome": "TeleGeography — AAG",
+        "url": "https://www.submarinecablemap.com/submarine-cable/asia-america-gateway-aag-cable-system",
+        "uso": "Landing points do Asia-America Gateway."
+      },
+      "sea-us": {
+        "nome": "TeleGeography — SEA-US",
+        "url": "https://www.submarinecablemap.com/submarine-cable/sea-us",
+        "uso": "Landing points do sistema SEA-US."
+      },
+      "coral-sea": {
+        "nome": "TeleGeography — Coral Sea Cable System",
+        "url": "https://www.submarinecablemap.com/submarine-cable/coral-sea-cable-system-cs",
+        "uso": "Landing points do Coral Sea Cable System."
+      },
+      "hawaiki": {
+        "nome": "TeleGeography — Hawaiki",
+        "url": "https://www.submarinecablemap.com/submarine-cable/hawaiki",
+        "uso": "Landing points do sistema Hawaiki."
+      },
+      "manatua": {
+        "nome": "TeleGeography — Manatua",
+        "url": "https://www.submarinecablemap.com/submarine-cable/manatua",
+        "uso": "Landing points do sistema Manatua."
+      },
+      "tui-samoa": {
+        "nome": "TeleGeography — Tui-Samoa",
+        "url": "https://www.submarinecablemap.com/submarine-cable/tui-samoa",
+        "uso": "Landing points do sistema Tui-Samoa."
+      },
+      "greenland-connect": {
+        "nome": "TeleGeography — Greenland Connect",
+        "url": "https://www.submarinecablemap.com/submarine-cable/greenland-connect",
+        "uso": "Landing points do sistema Greenland Connect."
+      },
+      "greenland-connect-north": {
+        "nome": "TeleGeography — Greenland Connect North",
+        "url": "https://www.submarinecablemap.com/submarine-cable/greenland-connect-north",
+        "uso": "Landing points do sistema Greenland Connect North."
+      },
+      "iris": {
+        "nome": "TeleGeography — IRIS",
+        "url": "https://www.submarinecablemap.com/submarine-cable/iris",
+        "uso": "Landing points do sistema IRIS."
+      },
+      "aec-1": {
+        "nome": "TeleGeography — AEC-1",
+        "url": "https://www.submarinecablemap.com/submarine-cable/aec-1",
+        "uso": "Landing points do Atlantic Crossing-1."
+      },
+      "farice-1": {
+        "nome": "TeleGeography — FARICE-1",
+        "url": "https://www.submarinecablemap.com/submarine-cable/farice-1",
+        "uso": "Landing points do sistema FARICE-1."
       }
     }
   },
   "nos": [
-    {"id": "las-toninas", "nome": "Las Toninas, Argentina", "lat": -36.4833, "lon": -56.7},
-    {"id": "punta-del-este", "nome": "Punta del Este, Uruguai", "lat": -34.96, "lon": -54.95},
-    {"id": "praia-grande", "nome": "Praia Grande / Santos (São Paulo), Brasil", "lat": -24.0058, "lon": -46.4028},
-    {"id": "fortaleza", "nome": "Fortaleza, Brasil", "lat": -3.7319, "lon": -38.5267},
-    {"id": "myrtle-beach", "nome": "Myrtle Beach, Estados Unidos", "lat": 33.6891, "lon": -78.8867},
-    {"id": "virginia-beach", "nome": "Virginia Beach, Estados Unidos", "lat": 36.8529, "lon": -75.978},
-    {"id": "bellport", "nome": "Bellport / Nova York, Estados Unidos", "lat": 40.757, "lon": -72.9393},
-    {"id": "bilbao", "nome": "Bilbao, Espanha", "lat": 43.263, "lon": -2.935},
-    {"id": "bude", "nome": "Bude, Reino Unido", "lat": 50.8289, "lon": -4.5469},
-    {"id": "sines", "nome": "Sines, Portugal", "lat": 37.9562, "lon": -8.8698},
-    {"id": "carcavelos", "nome": "Carcavelos / Lisboa, Portugal", "lat": 38.691, "lon": -9.322},
-    {"id": "marseille", "nome": "Marseille, França", "lat": 43.2965, "lon": 5.3698},
-    {"id": "accra", "nome": "Accra, Gana", "lat": 5.6037, "lon": -0.187},
-    {"id": "lagos", "nome": "Lagos, Nigéria", "lat": 6.5244, "lon": 3.3792},
-    {"id": "yzerfontein", "nome": "Yzerfontein / Cidade do Cabo, África do Sul", "lat": -33.3444, "lon": 18.1629},
-    {"id": "maputo", "nome": "Maputo, Moçambique", "lat": -25.9692, "lon": 32.5732},
-    {"id": "mombasa", "nome": "Mombasa, Quênia", "lat": -4.0435, "lon": 39.6682},
-    {"id": "djibouti", "nome": "Djibouti, Djibouti", "lat": 11.5721, "lon": 43.1456},
-    {"id": "jeddah", "nome": "Jeddah, Arábia Saudita", "lat": 21.4858, "lon": 39.1925},
-    {"id": "mumbai", "nome": "Mumbai, Índia", "lat": 19.076, "lon": 72.8777},
-    {"id": "singapore", "nome": "Singapura (Tuas/Changi)", "lat": 1.3521, "lon": 103.8198},
-    {"id": "perth", "nome": "Perth, Austrália", "lat": -31.9523, "lon": 115.8613},
-    {"id": "sydney", "nome": "Sydney (Alexandria), Austrália", "lat": -33.8688, "lon": 151.2093},
-    {"id": "auckland", "nome": "Auckland (Takapuna), Nova Zelândia", "lat": -36.8509, "lon": 174.7645},
-    {"id": "los-angeles", "nome": "Los Angeles (Hermosa Beach), Estados Unidos", "lat": 33.8647, "lon": -118.3971},
-    {"id": "chiba", "nome": "Chiba (Chikura/Maruyama), Japão", "lat": 35.033, "lon": 140.1}
+    {
+      "id": "las-toninas",
+      "nome": "Las Toninas, Argentina",
+      "lat": -36.4833,
+      "lon": -56.7
+    },
+    {
+      "id": "punta-del-este",
+      "nome": "Punta del Este, Uruguai",
+      "lat": -34.96,
+      "lon": -54.95
+    },
+    {
+      "id": "praia-grande",
+      "nome": "Praia Grande / Santos (São Paulo), Brasil",
+      "lat": -24.0058,
+      "lon": -46.4028
+    },
+    {
+      "id": "fortaleza",
+      "nome": "Fortaleza, Brasil",
+      "lat": -3.7319,
+      "lon": -38.5267
+    },
+    {
+      "id": "myrtle-beach",
+      "nome": "Myrtle Beach, Estados Unidos",
+      "lat": 33.6891,
+      "lon": -78.8867
+    },
+    {
+      "id": "virginia-beach",
+      "nome": "Virginia Beach, Estados Unidos",
+      "lat": 36.8529,
+      "lon": -75.978
+    },
+    {
+      "id": "bellport",
+      "nome": "Bellport / Nova York, Estados Unidos",
+      "lat": 40.757,
+      "lon": -72.9393
+    },
+    {
+      "id": "bilbao",
+      "nome": "Bilbao, Espanha",
+      "lat": 43.263,
+      "lon": -2.935
+    },
+    {
+      "id": "bude",
+      "nome": "Bude, Reino Unido",
+      "lat": 50.8289,
+      "lon": -4.5469
+    },
+    {
+      "id": "sines",
+      "nome": "Sines / Sesimbra, Portugal",
+      "lat": 37.9562,
+      "lon": -8.8698
+    },
+    {
+      "id": "carcavelos",
+      "nome": "Carcavelos / Seixal / Lisboa, Portugal",
+      "lat": 38.691,
+      "lon": -9.322
+    },
+    {
+      "id": "marseille",
+      "nome": "Marseille / Toulon, França",
+      "lat": 43.2965,
+      "lon": 5.3698
+    },
+    {
+      "id": "accra",
+      "nome": "Accra, Gana",
+      "lat": 5.6037,
+      "lon": -0.187
+    },
+    {
+      "id": "lagos",
+      "nome": "Lagos, Nigéria",
+      "lat": 6.5244,
+      "lon": 3.3792
+    },
+    {
+      "id": "yzerfontein",
+      "nome": "Yzerfontein / Cidade do Cabo, África do Sul",
+      "lat": -33.3444,
+      "lon": 18.1629
+    },
+    {
+      "id": "maputo",
+      "nome": "Maputo, Moçambique",
+      "lat": -25.9692,
+      "lon": 32.5732
+    },
+    {
+      "id": "mombasa",
+      "nome": "Mombasa, Quênia",
+      "lat": -4.0435,
+      "lon": 39.6682
+    },
+    {
+      "id": "djibouti",
+      "nome": "Djibouti, Djibouti",
+      "lat": 11.5721,
+      "lon": 43.1456
+    },
+    {
+      "id": "jeddah",
+      "nome": "Jeddah / Yanbu, Arábia Saudita",
+      "lat": 21.4858,
+      "lon": 39.1925
+    },
+    {
+      "id": "mumbai",
+      "nome": "Mumbai, Índia",
+      "lat": 19.076,
+      "lon": 72.8777
+    },
+    {
+      "id": "singapore",
+      "nome": "Singapura (Tuas/Changi)",
+      "lat": 1.3521,
+      "lon": 103.8198
+    },
+    {
+      "id": "perth",
+      "nome": "Perth, Austrália",
+      "lat": -31.9523,
+      "lon": 115.8613
+    },
+    {
+      "id": "sydney",
+      "nome": "Sydney (Alexandria), Austrália",
+      "lat": -33.8688,
+      "lon": 151.2093
+    },
+    {
+      "id": "auckland",
+      "nome": "Auckland (Takapuna), Nova Zelândia",
+      "lat": -36.8509,
+      "lon": 174.7645
+    },
+    {
+      "id": "los-angeles",
+      "nome": "Los Angeles (Hermosa Beach), Estados Unidos",
+      "lat": 33.8647,
+      "lon": -118.3971
+    },
+    {
+      "id": "chiba",
+      "nome": "Chiba (Chikura/Maruyama), Japão",
+      "lat": 35.033,
+      "lon": 140.1
+    },
+    {
+      "id": "dakar",
+      "nome": "Dakar, Senegal",
+      "lat": 14.7167,
+      "lon": -17.4677
+    },
+    {
+      "id": "gran-canaria",
+      "nome": "Gran Canaria, Espanha",
+      "lat": 28.1235,
+      "lon": -15.4363
+    },
+    {
+      "id": "abidjan",
+      "nome": "Abidjan, Costa do Marfim",
+      "lat": 5.36,
+      "lon": -4.0083
+    },
+    {
+      "id": "lome",
+      "nome": "Lomé, Togo",
+      "lat": 6.1256,
+      "lon": 1.2254
+    },
+    {
+      "id": "libreville",
+      "nome": "Libreville, Gabão",
+      "lat": 0.4162,
+      "lon": 9.4673
+    },
+    {
+      "id": "pointe-noire",
+      "nome": "Pointe-Noire, República do Congo",
+      "lat": -4.7761,
+      "lon": 11.8635
+    },
+    {
+      "id": "luanda",
+      "nome": "Luanda, Angola",
+      "lat": -8.839,
+      "lon": 13.2894
+    },
+    {
+      "id": "swakopmund",
+      "nome": "Swakopmund, Namíbia",
+      "lat": -22.6784,
+      "lon": 14.5266
+    },
+    {
+      "id": "gqeberha",
+      "nome": "Gqeberha, África do Sul",
+      "lat": -33.9608,
+      "lon": 25.6022
+    },
+    {
+      "id": "amanzimtoti",
+      "nome": "Amanzimtoti, África do Sul",
+      "lat": -30.0522,
+      "lon": 30.8853
+    },
+    {
+      "id": "dar-es-salaam",
+      "nome": "Dar es Salaam, Tanzânia",
+      "lat": -6.7924,
+      "lon": 39.2083
+    },
+    {
+      "id": "moroni",
+      "nome": "Moroni, Comores",
+      "lat": -11.7172,
+      "lon": 43.2473
+    },
+    {
+      "id": "mahajanga",
+      "nome": "Mahajanga, Madagascar",
+      "lat": -15.7167,
+      "lon": 46.3167
+    },
+    {
+      "id": "nacala",
+      "nome": "Nacala, Moçambique",
+      "lat": -14.5428,
+      "lon": 40.6728
+    },
+    {
+      "id": "carana",
+      "nome": "Carana (Mahé), Seicheles",
+      "lat": -4.6167,
+      "lon": 55.45
+    },
+    {
+      "id": "mogadishu",
+      "nome": "Mogadíscio, Somália",
+      "lat": 2.0469,
+      "lon": 45.3182
+    },
+    {
+      "id": "berbera",
+      "nome": "Berbera, Somalilândia",
+      "lat": 10.4396,
+      "lon": 45.0143
+    },
+    {
+      "id": "port-sudan",
+      "nome": "Port Sudan, Sudão",
+      "lat": 19.6158,
+      "lon": 37.2164
+    },
+    {
+      "id": "suez",
+      "nome": "Suez / Zafarana, Egito",
+      "lat": 29.9668,
+      "lon": 32.5498
+    },
+    {
+      "id": "port-said",
+      "nome": "Port Said, Egito",
+      "lat": 31.2653,
+      "lon": 32.3019
+    },
+    {
+      "id": "tympaki",
+      "nome": "Tympaki, Grécia",
+      "lat": 35.0729,
+      "lon": 24.7675
+    },
+    {
+      "id": "barcelona",
+      "nome": "Barcelona, Espanha",
+      "lat": 41.3874,
+      "lon": 2.1686
+    },
+    {
+      "id": "genoa",
+      "nome": "Gênova, Itália",
+      "lat": 44.4056,
+      "lon": 8.9463
+    },
+    {
+      "id": "salalah",
+      "nome": "Salalah, Omã",
+      "lat": 17.0197,
+      "lon": 54.0897
+    },
+    {
+      "id": "barka",
+      "nome": "Barka, Omã",
+      "lat": 23.7073,
+      "lon": 57.8891
+    },
+    {
+      "id": "abu-dhabi",
+      "nome": "Abu Dhabi, Emirados Árabes Unidos",
+      "lat": 24.4539,
+      "lon": 54.3773
+    },
+    {
+      "id": "doha",
+      "nome": "Doha, Catar",
+      "lat": 25.2854,
+      "lon": 51.531
+    },
+    {
+      "id": "manama",
+      "nome": "Manama, Bahrein",
+      "lat": 26.2235,
+      "lon": 50.5876
+    },
+    {
+      "id": "al-faw",
+      "nome": "Al-Faw, Iraque",
+      "lat": 29.9742,
+      "lon": 48.4731
+    },
+    {
+      "id": "karachi",
+      "nome": "Karachi, Paquistão",
+      "lat": 24.8607,
+      "lon": 67.0011
+    },
+    {
+      "id": "catania",
+      "nome": "Catânia, Itália",
+      "lat": 37.5079,
+      "lon": 15.083
+    },
+    {
+      "id": "matara",
+      "nome": "Matara, Sri Lanka",
+      "lat": 5.9549,
+      "lon": 80.555
+    },
+    {
+      "id": "kuakata",
+      "nome": "Kuakata, Bangladesh",
+      "lat": 21.8168,
+      "lon": 90.1214
+    },
+    {
+      "id": "ngwe-saung",
+      "nome": "Ngwe Saung, Mianmar",
+      "lat": 16.85,
+      "lon": 94.3917
+    },
+    {
+      "id": "melaka",
+      "nome": "Melaka, Malásia",
+      "lat": 2.1896,
+      "lon": 102.2501
+    },
+    {
+      "id": "medan",
+      "nome": "Medan, Indonésia",
+      "lat": 3.5952,
+      "lon": 98.6722
+    },
+    {
+      "id": "fujairah",
+      "nome": "Fujairah, Emirados Árabes Unidos",
+      "lat": 25.1288,
+      "lon": 56.3265
+    },
+    {
+      "id": "hong-kong",
+      "nome": "Hong Kong",
+      "lat": 22.3193,
+      "lon": 114.1694
+    },
+    {
+      "id": "shantou",
+      "nome": "Shantou, China",
+      "lat": 23.3541,
+      "lon": 116.682
+    },
+    {
+      "id": "batangas",
+      "nome": "Batangas, Filipinas",
+      "lat": 13.7565,
+      "lon": 121.0583
+    },
+    {
+      "id": "sriracha",
+      "nome": "Sriracha, Tailândia",
+      "lat": 13.1737,
+      "lon": 100.9311
+    },
+    {
+      "id": "quy-nhon",
+      "nome": "Quy Nhon, Vietnã",
+      "lat": 13.782,
+      "lon": 109.219
+    },
+    {
+      "id": "vung-tau",
+      "nome": "Vung Tau, Vietnã",
+      "lat": 10.4114,
+      "lon": 107.1362
+    },
+    {
+      "id": "brunei",
+      "nome": "Bandar Seri Begawan, Brunei",
+      "lat": 4.9031,
+      "lon": 114.9398
+    },
+    {
+      "id": "davao",
+      "nome": "Davao, Filipinas",
+      "lat": 7.1907,
+      "lon": 125.4553
+    },
+    {
+      "id": "guam",
+      "nome": "Piti, Guam",
+      "lat": 13.4626,
+      "lon": 144.6937
+    },
+    {
+      "id": "yap",
+      "nome": "Yap, Micronésia",
+      "lat": 9.5167,
+      "lon": 138.1167
+    },
+    {
+      "id": "palau",
+      "nome": "Palau",
+      "lat": 7.5,
+      "lon": 134.6242
+    },
+    {
+      "id": "makaha",
+      "nome": "Makaha, Havaí, Estados Unidos",
+      "lat": 21.4694,
+      "lon": -158.2175
+    },
+    {
+      "id": "kauditan",
+      "nome": "Kauditan, Indonésia",
+      "lat": 1.3745,
+      "lon": 125.0528
+    },
+    {
+      "id": "port-moresby",
+      "nome": "Port Moresby, Papua-Nova Guiné",
+      "lat": -9.4438,
+      "lon": 147.1803
+    },
+    {
+      "id": "honiara",
+      "nome": "Honiara, Ilhas Salomão",
+      "lat": -9.4456,
+      "lon": 159.9729
+    },
+    {
+      "id": "auki",
+      "nome": "Auki, Ilhas Salomão",
+      "lat": -8.7676,
+      "lon": 160.7034
+    },
+    {
+      "id": "noro",
+      "nome": "Noro, Ilhas Salomão",
+      "lat": -8.219,
+      "lon": 157.2
+    },
+    {
+      "id": "taro",
+      "nome": "Taro, Ilhas Salomão",
+      "lat": -6.7111,
+      "lon": 156.3972
+    },
+    {
+      "id": "nukunonu",
+      "nome": "Nukunonu, Tokelau",
+      "lat": -9.2,
+      "lon": -171.85
+    },
+    {
+      "id": "mangawhai",
+      "nome": "Mangawhai, Nova Zelândia",
+      "lat": -36.126,
+      "lon": 174.577
+    },
+    {
+      "id": "pago-pago",
+      "nome": "Pago Pago, Samoa Americana",
+      "lat": -14.2756,
+      "lon": -170.702
+    },
+    {
+      "id": "neiafu",
+      "nome": "Neiafu, Tonga",
+      "lat": -18.65,
+      "lon": -173.9833
+    },
+    {
+      "id": "suva",
+      "nome": "Suva, Fiji",
+      "lat": -18.1416,
+      "lon": 178.4419
+    },
+    {
+      "id": "apia",
+      "nome": "Apia, Samoa",
+      "lat": -13.8507,
+      "lon": -171.7514
+    },
+    {
+      "id": "rarotonga",
+      "nome": "Rarotonga, Ilhas Cook",
+      "lat": -21.2367,
+      "lon": -159.7777
+    },
+    {
+      "id": "aitutaki",
+      "nome": "Aitutaki, Ilhas Cook",
+      "lat": -18.8578,
+      "lon": -159.7852
+    },
+    {
+      "id": "alofi",
+      "nome": "Alofi, Niue",
+      "lat": -19.0554,
+      "lon": -169.9179
+    },
+    {
+      "id": "tahiti",
+      "nome": "To'ahotu, Taiti, Polinésia Francesa",
+      "lat": -17.745,
+      "lon": -149.3167
+    },
+    {
+      "id": "ireland-west",
+      "nome": "Galway / Killala, Irlanda",
+      "lat": 53.65,
+      "lon": -9.25
+    },
+    {
+      "id": "iceland",
+      "nome": "Islândia (landing points sul/leste)",
+      "lat": 64.5,
+      "lon": -20.0
+    },
+    {
+      "id": "nuuk",
+      "nome": "Nuuk, Groenlândia",
+      "lat": 64.1835,
+      "lon": -51.7216
+    },
+    {
+      "id": "qaqortoq",
+      "nome": "Qaqortoq, Groenlândia",
+      "lat": 60.7184,
+      "lon": -46.0356
+    },
+    {
+      "id": "milton-nl",
+      "nome": "Milton, Terra Nova e Labrador, Canadá",
+      "lat": 47.5,
+      "lon": -53.4
+    },
+    {
+      "id": "maniitsoq",
+      "nome": "Maniitsoq, Groenlândia",
+      "lat": 65.4167,
+      "lon": -52.9
+    },
+    {
+      "id": "sisimiut",
+      "nome": "Sisimiut, Groenlândia",
+      "lat": 66.9395,
+      "lon": -53.6735
+    },
+    {
+      "id": "aasiaat",
+      "nome": "Aasiaat, Groenlândia",
+      "lat": 68.7098,
+      "lon": -52.8699
+    },
+    {
+      "id": "faroe-islands",
+      "nome": "Funningsfjørður, Ilhas Faroé",
+      "lat": 62.238,
+      "lon": -6.928
+    }
   ],
   "arestas": [
-    {"origem": "myrtle-beach", "destino": "praia-grande", "peso": 7278, "cabo": "Firmina", "fontes": ["firmina"]},
-    {"origem": "praia-grande", "destino": "punta-del-este", "peso": 1471, "cabo": "Firmina", "fontes": ["firmina"]},
-    {"origem": "punta-del-este", "destino": "las-toninas", "peso": 232, "cabo": "Firmina", "fontes": ["firmina"]},
-    {"origem": "praia-grande", "destino": "fortaleza", "peso": 2407, "cabo": "Monet", "fontes": ["monet"]},
-    {"origem": "fortaleza", "destino": "sines", "peso": 5552, "cabo": "EllaLink", "fontes": ["ellalink"]},
-    {"origem": "fortaleza", "destino": "virginia-beach", "peso": 5949, "cabo": "BRUSA", "fontes": ["brusa"]},
-    {"origem": "virginia-beach", "destino": "bilbao", "peso": 6058, "cabo": "MAREA", "fontes": ["marea"]},
-    {"origem": "bellport", "destino": "bilbao", "peso": 5616, "cabo": "Grace Hopper", "fontes": ["grace-hopper"]},
-    {"origem": "bellport", "destino": "bude", "peso": 5223, "cabo": "Grace Hopper", "fontes": ["grace-hopper"]},
-    {"origem": "bude", "destino": "carcavelos", "peso": 1401, "cabo": "2Africa", "fontes": ["2africa"]},
-    {"origem": "carcavelos", "destino": "accra", "peso": 3793, "cabo": "2Africa", "fontes": ["2africa"]},
-    {"origem": "accra", "destino": "lagos", "peso": 407, "cabo": "2Africa", "fontes": ["2africa"]},
-    {"origem": "lagos", "destino": "yzerfontein", "peso": 4700, "cabo": "2Africa", "fontes": ["2africa"]},
-    {"origem": "yzerfontein", "destino": "maputo", "peso": 1614, "cabo": "2Africa", "fontes": ["2africa"]},
-    {"origem": "maputo", "destino": "mombasa", "peso": 2553, "cabo": "2Africa", "fontes": ["2africa"]},
-    {"origem": "mombasa", "destino": "djibouti", "peso": 1778, "cabo": "2Africa", "fontes": ["2africa"]},
-    {"origem": "djibouti", "destino": "jeddah", "peso": 1180, "cabo": "2Africa", "fontes": ["2africa"]},
-    {"origem": "jeddah", "destino": "mumbai", "peso": 3517, "cabo": "2Africa", "fontes": ["2africa"]},
-    {"origem": "mumbai", "destino": "marseille", "peso": 6765, "cabo": "2Africa", "fontes": ["2africa"]},
-    {"origem": "marseille", "destino": "carcavelos", "peso": 1333, "cabo": "2Africa", "fontes": ["2africa"]},
-    {"origem": "mumbai", "destino": "singapore", "peso": 3904, "cabo": "India Asia Xpress (IAX)", "fontes": ["iax"]},
-    {"origem": "singapore", "destino": "perth", "peso": 3915, "cabo": "INDIGO-West", "fontes": ["indigo-west"]},
-    {"origem": "perth", "destino": "sydney", "peso": 3290, "cabo": "INDIGO-Central", "fontes": ["indigo-central"]},
-    {"origem": "sydney", "destino": "auckland", "peso": 2156, "cabo": "Southern Cross NEXT", "fontes": ["southern-cross-next"]},
-    {"origem": "auckland", "destino": "los-angeles", "peso": 10472, "cabo": "Southern Cross NEXT", "fontes": ["southern-cross-next"]},
-    {"origem": "los-angeles", "destino": "chiba", "peso": 8827, "cabo": "JUPITER", "fontes": ["jupiter"]},
-    {"origem": "chiba", "destino": "singapore", "peso": 5300, "cabo": "SJC2", "fontes": ["sjc2"]},
-    {"origem": "bude", "destino": "mumbai", "peso": 7501, "cabo": "Europe India Gateway (EIG)", "fontes": ["eig"]},
-    {"origem": "carcavelos", "destino": "lagos", "peso": 3798, "cabo": "Africa Coast to Europe (ACE)", "fontes": ["ace"]},
-    {"origem": "sydney", "destino": "los-angeles", "peso": 12051, "cabo": "Southern Cross NEXT", "fontes": ["southern-cross-next"]}
+    {
+      "origem": "myrtle-beach",
+      "destino": "praia-grande",
+      "peso": 7278,
+      "cabo": "Firmina",
+      "fontes": [
+        "firmina"
+      ]
+    },
+    {
+      "origem": "praia-grande",
+      "destino": "punta-del-este",
+      "peso": 1471,
+      "cabo": "Firmina",
+      "fontes": [
+        "firmina"
+      ]
+    },
+    {
+      "origem": "punta-del-este",
+      "destino": "las-toninas",
+      "peso": 232,
+      "cabo": "Firmina",
+      "fontes": [
+        "firmina"
+      ]
+    },
+    {
+      "origem": "praia-grande",
+      "destino": "fortaleza",
+      "peso": 2407,
+      "cabo": "Monet",
+      "fontes": [
+        "monet"
+      ]
+    },
+    {
+      "origem": "fortaleza",
+      "destino": "sines",
+      "peso": 5552,
+      "cabo": "EllaLink",
+      "fontes": [
+        "ellalink"
+      ]
+    },
+    {
+      "origem": "fortaleza",
+      "destino": "virginia-beach",
+      "peso": 5949,
+      "cabo": "BRUSA",
+      "fontes": [
+        "brusa"
+      ]
+    },
+    {
+      "origem": "virginia-beach",
+      "destino": "bilbao",
+      "peso": 6058,
+      "cabo": "MAREA",
+      "fontes": [
+        "marea"
+      ]
+    },
+    {
+      "origem": "bellport",
+      "destino": "bilbao",
+      "peso": 5616,
+      "cabo": "Grace Hopper",
+      "fontes": [
+        "grace-hopper"
+      ]
+    },
+    {
+      "origem": "bellport",
+      "destino": "bude",
+      "peso": 5223,
+      "cabo": "Grace Hopper",
+      "fontes": [
+        "grace-hopper"
+      ]
+    },
+    {
+      "origem": "bude",
+      "destino": "carcavelos",
+      "peso": 1401,
+      "cabo": "2Africa",
+      "fontes": [
+        "2africa"
+      ]
+    },
+    {
+      "origem": "carcavelos",
+      "destino": "accra",
+      "peso": 3793,
+      "cabo": "2Africa",
+      "fontes": [
+        "2africa"
+      ]
+    },
+    {
+      "origem": "accra",
+      "destino": "lagos",
+      "peso": 407,
+      "cabo": "2Africa",
+      "fontes": [
+        "2africa"
+      ]
+    },
+    {
+      "origem": "lagos",
+      "destino": "yzerfontein",
+      "peso": 4700,
+      "cabo": "2Africa",
+      "fontes": [
+        "2africa"
+      ]
+    },
+    {
+      "origem": "yzerfontein",
+      "destino": "maputo",
+      "peso": 1614,
+      "cabo": "2Africa",
+      "fontes": [
+        "2africa"
+      ]
+    },
+    {
+      "origem": "maputo",
+      "destino": "mombasa",
+      "peso": 2553,
+      "cabo": "2Africa",
+      "fontes": [
+        "2africa"
+      ]
+    },
+    {
+      "origem": "mombasa",
+      "destino": "djibouti",
+      "peso": 1778,
+      "cabo": "2Africa",
+      "fontes": [
+        "2africa"
+      ]
+    },
+    {
+      "origem": "djibouti",
+      "destino": "jeddah",
+      "peso": 1180,
+      "cabo": "2Africa",
+      "fontes": [
+        "2africa"
+      ]
+    },
+    {
+      "origem": "jeddah",
+      "destino": "mumbai",
+      "peso": 3517,
+      "cabo": "2Africa",
+      "fontes": [
+        "2africa"
+      ]
+    },
+    {
+      "origem": "mumbai",
+      "destino": "marseille",
+      "peso": 6765,
+      "cabo": "2Africa",
+      "fontes": [
+        "2africa"
+      ]
+    },
+    {
+      "origem": "marseille",
+      "destino": "carcavelos",
+      "peso": 1333,
+      "cabo": "2Africa",
+      "fontes": [
+        "2africa"
+      ]
+    },
+    {
+      "origem": "mumbai",
+      "destino": "singapore",
+      "peso": 3904,
+      "cabo": "India Asia Xpress (IAX)",
+      "fontes": [
+        "iax"
+      ]
+    },
+    {
+      "origem": "singapore",
+      "destino": "perth",
+      "peso": 3915,
+      "cabo": "INDIGO-West",
+      "fontes": [
+        "indigo-west"
+      ]
+    },
+    {
+      "origem": "perth",
+      "destino": "sydney",
+      "peso": 3290,
+      "cabo": "INDIGO-Central",
+      "fontes": [
+        "indigo-central"
+      ]
+    },
+    {
+      "origem": "sydney",
+      "destino": "auckland",
+      "peso": 2156,
+      "cabo": "Southern Cross NEXT",
+      "fontes": [
+        "southern-cross-next"
+      ]
+    },
+    {
+      "origem": "auckland",
+      "destino": "los-angeles",
+      "peso": 10472,
+      "cabo": "Southern Cross NEXT",
+      "fontes": [
+        "southern-cross-next"
+      ]
+    },
+    {
+      "origem": "los-angeles",
+      "destino": "chiba",
+      "peso": 8827,
+      "cabo": "JUPITER",
+      "fontes": [
+        "jupiter"
+      ]
+    },
+    {
+      "origem": "chiba",
+      "destino": "singapore",
+      "peso": 5300,
+      "cabo": "SJC2",
+      "fontes": [
+        "sjc2"
+      ]
+    },
+    {
+      "origem": "bude",
+      "destino": "mumbai",
+      "peso": 7501,
+      "cabo": "Europe India Gateway (EIG)",
+      "fontes": [
+        "eig"
+      ]
+    },
+    {
+      "origem": "carcavelos",
+      "destino": "lagos",
+      "peso": 3798,
+      "cabo": "Africa Coast to Europe (ACE)",
+      "fontes": [
+        "ace"
+      ]
+    },
+    {
+      "origem": "sydney",
+      "destino": "los-angeles",
+      "peso": 12051,
+      "cabo": "Southern Cross NEXT",
+      "fontes": [
+        "southern-cross-next"
+      ]
+    },
+    {
+      "origem": "bude",
+      "destino": "barcelona",
+      "peso": 1169,
+      "cabo": "2Africa",
+      "fontes": [
+        "2africa"
+      ]
+    },
+    {
+      "origem": "barcelona",
+      "destino": "marseille",
+      "peso": 338,
+      "cabo": "2Africa",
+      "fontes": [
+        "2africa"
+      ]
+    },
+    {
+      "origem": "marseille",
+      "destino": "genoa",
+      "peso": 312,
+      "cabo": "2Africa",
+      "fontes": [
+        "2africa"
+      ]
+    },
+    {
+      "origem": "genoa",
+      "destino": "tympaki",
+      "peso": 1700,
+      "cabo": "2Africa",
+      "fontes": [
+        "2africa"
+      ]
+    },
+    {
+      "origem": "tympaki",
+      "destino": "port-said",
+      "peso": 819,
+      "cabo": "2Africa",
+      "fontes": [
+        "2africa"
+      ]
+    },
+    {
+      "origem": "port-said",
+      "destino": "suez",
+      "peso": 146,
+      "cabo": "2Africa",
+      "fontes": [
+        "2africa"
+      ]
+    },
+    {
+      "origem": "suez",
+      "destino": "jeddah",
+      "peso": 1154,
+      "cabo": "2Africa",
+      "fontes": [
+        "2africa"
+      ]
+    },
+    {
+      "origem": "jeddah",
+      "destino": "port-sudan",
+      "peso": 293,
+      "cabo": "2Africa",
+      "fontes": [
+        "2africa"
+      ]
+    },
+    {
+      "origem": "port-sudan",
+      "destino": "djibouti",
+      "peso": 1097,
+      "cabo": "2Africa",
+      "fontes": [
+        "2africa"
+      ]
+    },
+    {
+      "origem": "djibouti",
+      "destino": "berbera",
+      "peso": 240,
+      "cabo": "2Africa",
+      "fontes": [
+        "2africa"
+      ]
+    },
+    {
+      "origem": "berbera",
+      "destino": "mogadishu",
+      "peso": 934,
+      "cabo": "2Africa",
+      "fontes": [
+        "2africa"
+      ]
+    },
+    {
+      "origem": "mogadishu",
+      "destino": "mombasa",
+      "peso": 923,
+      "cabo": "2Africa",
+      "fontes": [
+        "2africa"
+      ]
+    },
+    {
+      "origem": "mombasa",
+      "destino": "dar-es-salaam",
+      "peso": 310,
+      "cabo": "2Africa",
+      "fontes": [
+        "2africa"
+      ]
+    },
+    {
+      "origem": "dar-es-salaam",
+      "destino": "nacala",
+      "peso": 877,
+      "cabo": "2Africa",
+      "fontes": [
+        "2africa"
+      ]
+    },
+    {
+      "origem": "nacala",
+      "destino": "mahajanga",
+      "peso": 620,
+      "cabo": "2Africa",
+      "fontes": [
+        "2africa"
+      ]
+    },
+    {
+      "origem": "mahajanga",
+      "destino": "carana",
+      "peso": 1587,
+      "cabo": "2Africa",
+      "fontes": [
+        "2africa"
+      ]
+    },
+    {
+      "origem": "carana",
+      "destino": "moroni",
+      "peso": 1557,
+      "cabo": "2Africa",
+      "fontes": [
+        "2africa"
+      ]
+    },
+    {
+      "origem": "moroni",
+      "destino": "maputo",
+      "peso": 1940,
+      "cabo": "2Africa",
+      "fontes": [
+        "2africa"
+      ]
+    },
+    {
+      "origem": "maputo",
+      "destino": "amanzimtoti",
+      "peso": 483,
+      "cabo": "2Africa",
+      "fontes": [
+        "2africa"
+      ]
+    },
+    {
+      "origem": "amanzimtoti",
+      "destino": "gqeberha",
+      "peso": 661,
+      "cabo": "2Africa",
+      "fontes": [
+        "2africa"
+      ]
+    },
+    {
+      "origem": "gqeberha",
+      "destino": "yzerfontein",
+      "peso": 692,
+      "cabo": "2Africa",
+      "fontes": [
+        "2africa"
+      ]
+    },
+    {
+      "origem": "yzerfontein",
+      "destino": "luanda",
+      "peso": 2770,
+      "cabo": "2Africa",
+      "fontes": [
+        "2africa"
+      ]
+    },
+    {
+      "origem": "luanda",
+      "destino": "pointe-noire",
+      "peso": 478,
+      "cabo": "2Africa",
+      "fontes": [
+        "2africa"
+      ]
+    },
+    {
+      "origem": "pointe-noire",
+      "destino": "libreville",
+      "peso": 636,
+      "cabo": "2Africa",
+      "fontes": [
+        "2africa"
+      ]
+    },
+    {
+      "origem": "libreville",
+      "destino": "abidjan",
+      "peso": 1594,
+      "cabo": "2Africa",
+      "fontes": [
+        "2africa"
+      ]
+    },
+    {
+      "origem": "abidjan",
+      "destino": "dakar",
+      "peso": 1802,
+      "cabo": "2Africa",
+      "fontes": [
+        "2africa"
+      ]
+    },
+    {
+      "origem": "dakar",
+      "destino": "gran-canaria",
+      "peso": 1505,
+      "cabo": "2Africa",
+      "fontes": [
+        "2africa"
+      ]
+    },
+    {
+      "origem": "gran-canaria",
+      "destino": "carcavelos",
+      "peso": 1304,
+      "cabo": "2Africa",
+      "fontes": [
+        "2africa"
+      ]
+    },
+    {
+      "origem": "djibouti",
+      "destino": "salalah",
+      "peso": 1325,
+      "cabo": "2Africa",
+      "fontes": [
+        "2africa"
+      ]
+    },
+    {
+      "origem": "salalah",
+      "destino": "barka",
+      "peso": 842,
+      "cabo": "2Africa",
+      "fontes": [
+        "2africa"
+      ]
+    },
+    {
+      "origem": "barka",
+      "destino": "abu-dhabi",
+      "peso": 366,
+      "cabo": "2Africa",
+      "fontes": [
+        "2africa"
+      ]
+    },
+    {
+      "origem": "abu-dhabi",
+      "destino": "doha",
+      "peso": 302,
+      "cabo": "2Africa",
+      "fontes": [
+        "2africa"
+      ]
+    },
+    {
+      "origem": "doha",
+      "destino": "manama",
+      "peso": 141,
+      "cabo": "2Africa",
+      "fontes": [
+        "2africa"
+      ]
+    },
+    {
+      "origem": "manama",
+      "destino": "al-faw",
+      "peso": 466,
+      "cabo": "2Africa",
+      "fontes": [
+        "2africa"
+      ]
+    },
+    {
+      "origem": "al-faw",
+      "destino": "karachi",
+      "peso": 1912,
+      "cabo": "2Africa",
+      "fontes": [
+        "2africa"
+      ]
+    },
+    {
+      "origem": "karachi",
+      "destino": "mumbai",
+      "peso": 883,
+      "cabo": "2Africa",
+      "fontes": [
+        "2africa"
+      ]
+    },
+    {
+      "origem": "carcavelos",
+      "destino": "dakar",
+      "peso": 2783,
+      "cabo": "2Africa",
+      "fontes": [
+        "2africa"
+      ]
+    },
+    {
+      "origem": "gran-canaria",
+      "destino": "accra",
+      "peso": 2976,
+      "cabo": "2Africa",
+      "fontes": [
+        "2africa"
+      ]
+    },
+    {
+      "origem": "dakar",
+      "destino": "lagos",
+      "peso": 2451,
+      "cabo": "2Africa",
+      "fontes": [
+        "2africa"
+      ]
+    },
+    {
+      "origem": "accra",
+      "destino": "abidjan",
+      "peso": 424,
+      "cabo": "2Africa",
+      "fontes": [
+        "2africa"
+      ]
+    },
+    {
+      "origem": "carcavelos",
+      "destino": "lome",
+      "peso": 3773,
+      "cabo": "WACS",
+      "fontes": [
+        "wacs"
+      ]
+    },
+    {
+      "origem": "lome",
+      "destino": "abidjan",
+      "peso": 585,
+      "cabo": "WACS",
+      "fontes": [
+        "wacs"
+      ]
+    },
+    {
+      "origem": "abidjan",
+      "destino": "lagos",
+      "peso": 827,
+      "cabo": "WACS",
+      "fontes": [
+        "wacs"
+      ]
+    },
+    {
+      "origem": "lagos",
+      "destino": "pointe-noire",
+      "peso": 1570,
+      "cabo": "WACS",
+      "fontes": [
+        "wacs"
+      ]
+    },
+    {
+      "origem": "pointe-noire",
+      "destino": "swakopmund",
+      "peso": 2011,
+      "cabo": "WACS",
+      "fontes": [
+        "wacs"
+      ]
+    },
+    {
+      "origem": "luanda",
+      "destino": "swakopmund",
+      "peso": 1545,
+      "cabo": "WACS",
+      "fontes": [
+        "wacs"
+      ]
+    },
+    {
+      "origem": "swakopmund",
+      "destino": "yzerfontein",
+      "peso": 1238,
+      "cabo": "WACS",
+      "fontes": [
+        "wacs"
+      ]
+    },
+    {
+      "origem": "lome",
+      "destino": "accra",
+      "peso": 167,
+      "cabo": "WACS",
+      "fontes": [
+        "wacs"
+      ]
+    },
+    {
+      "origem": "sines",
+      "destino": "lome",
+      "peso": 3683,
+      "cabo": "Equiano",
+      "fontes": [
+        "equiano"
+      ]
+    },
+    {
+      "origem": "lome",
+      "destino": "swakopmund",
+      "peso": 3515,
+      "cabo": "Equiano",
+      "fontes": [
+        "equiano"
+      ]
+    },
+    {
+      "origem": "lagos",
+      "destino": "sines",
+      "peso": 3707,
+      "cabo": "Equiano",
+      "fontes": [
+        "equiano"
+      ]
+    },
+    {
+      "origem": "lagos",
+      "destino": "swakopmund",
+      "peso": 3466,
+      "cabo": "Equiano",
+      "fontes": [
+        "equiano"
+      ]
+    },
+    {
+      "origem": "sines",
+      "destino": "yzerfontein",
+      "peso": 8407,
+      "cabo": "Equiano",
+      "fontes": [
+        "equiano"
+      ]
+    },
+    {
+      "origem": "djibouti",
+      "destino": "mogadishu",
+      "peso": 1086,
+      "cabo": "EASSy",
+      "fontes": [
+        "eassy"
+      ]
+    },
+    {
+      "origem": "mogadishu",
+      "destino": "dar-es-salaam",
+      "peso": 1194,
+      "cabo": "EASSy",
+      "fontes": [
+        "eassy"
+      ]
+    },
+    {
+      "origem": "dar-es-salaam",
+      "destino": "moroni",
+      "peso": 704,
+      "cabo": "EASSy",
+      "fontes": [
+        "eassy"
+      ]
+    },
+    {
+      "origem": "mogadishu",
+      "destino": "moroni",
+      "peso": 1548,
+      "cabo": "EASSy",
+      "fontes": [
+        "eassy"
+      ]
+    },
+    {
+      "origem": "djibouti",
+      "destino": "moroni",
+      "peso": 2590,
+      "cabo": "EASSy",
+      "fontes": [
+        "eassy"
+      ]
+    },
+    {
+      "origem": "mombasa",
+      "destino": "moroni",
+      "peso": 940,
+      "cabo": "EASSy",
+      "fontes": [
+        "eassy"
+      ]
+    },
+    {
+      "origem": "dar-es-salaam",
+      "destino": "maputo",
+      "peso": 2245,
+      "cabo": "EASSy",
+      "fontes": [
+        "eassy"
+      ]
+    },
+    {
+      "origem": "djibouti",
+      "destino": "dar-es-salaam",
+      "peso": 2088,
+      "cabo": "EASSy",
+      "fontes": [
+        "eassy"
+      ]
+    },
+    {
+      "origem": "marseille",
+      "destino": "catania",
+      "peso": 1043,
+      "cabo": "SeaMeWe-5",
+      "fontes": [
+        "seamewe-5"
+      ]
+    },
+    {
+      "origem": "catania",
+      "destino": "suez",
+      "peso": 1816,
+      "cabo": "SeaMeWe-5",
+      "fontes": [
+        "seamewe-5"
+      ]
+    },
+    {
+      "origem": "catania",
+      "destino": "fujairah",
+      "peso": 4115,
+      "cabo": "SeaMeWe-5",
+      "fontes": [
+        "seamewe-5"
+      ]
+    },
+    {
+      "origem": "jeddah",
+      "destino": "fujairah",
+      "peso": 1795,
+      "cabo": "SeaMeWe-5",
+      "fontes": [
+        "seamewe-5"
+      ]
+    },
+    {
+      "origem": "fujairah",
+      "destino": "karachi",
+      "peso": 1076,
+      "cabo": "SeaMeWe-5",
+      "fontes": [
+        "seamewe-5"
+      ]
+    },
+    {
+      "origem": "karachi",
+      "destino": "matara",
+      "peso": 2551,
+      "cabo": "SeaMeWe-5",
+      "fontes": [
+        "seamewe-5"
+      ]
+    },
+    {
+      "origem": "matara",
+      "destino": "kuakata",
+      "peso": 2042,
+      "cabo": "SeaMeWe-5",
+      "fontes": [
+        "seamewe-5"
+      ]
+    },
+    {
+      "origem": "kuakata",
+      "destino": "ngwe-saung",
+      "peso": 711,
+      "cabo": "SeaMeWe-5",
+      "fontes": [
+        "seamewe-5"
+      ]
+    },
+    {
+      "origem": "ngwe-saung",
+      "destino": "melaka",
+      "peso": 1843,
+      "cabo": "SeaMeWe-5",
+      "fontes": [
+        "seamewe-5"
+      ]
+    },
+    {
+      "origem": "melaka",
+      "destino": "singapore",
+      "peso": 198,
+      "cabo": "SeaMeWe-5",
+      "fontes": [
+        "seamewe-5"
+      ]
+    },
+    {
+      "origem": "singapore",
+      "destino": "medan",
+      "peso": 624,
+      "cabo": "SeaMeWe-5",
+      "fontes": [
+        "seamewe-5"
+      ]
+    },
+    {
+      "origem": "medan",
+      "destino": "karachi",
+      "peso": 4131,
+      "cabo": "SeaMeWe-5",
+      "fontes": [
+        "seamewe-5"
+      ]
+    },
+    {
+      "origem": "catania",
+      "destino": "jeddah",
+      "peso": 2920,
+      "cabo": "SeaMeWe-5",
+      "fontes": [
+        "seamewe-5"
+      ]
+    },
+    {
+      "origem": "suez",
+      "destino": "fujairah",
+      "peso": 2400,
+      "cabo": "SeaMeWe-5",
+      "fontes": [
+        "seamewe-5"
+      ]
+    },
+    {
+      "origem": "djibouti",
+      "destino": "karachi",
+      "peso": 2913,
+      "cabo": "SeaMeWe-5",
+      "fontes": [
+        "seamewe-5"
+      ]
+    },
+    {
+      "origem": "matara",
+      "destino": "singapore",
+      "peso": 2631,
+      "cabo": "SeaMeWe-5",
+      "fontes": [
+        "seamewe-5"
+      ]
+    },
+    {
+      "origem": "ngwe-saung",
+      "destino": "singapore",
+      "peso": 2009,
+      "cabo": "SeaMeWe-5",
+      "fontes": [
+        "seamewe-5"
+      ]
+    },
+    {
+      "origem": "medan",
+      "destino": "fujairah",
+      "peso": 5117,
+      "cabo": "SeaMeWe-5",
+      "fontes": [
+        "seamewe-5"
+      ]
+    },
+    {
+      "origem": "chiba",
+      "destino": "hong-kong",
+      "peso": 2885,
+      "cabo": "Asia Direct Cable (ADC)",
+      "fontes": [
+        "adc"
+      ]
+    },
+    {
+      "origem": "hong-kong",
+      "destino": "shantou",
+      "peso": 282,
+      "cabo": "Asia Direct Cable (ADC)",
+      "fontes": [
+        "adc"
+      ]
+    },
+    {
+      "origem": "shantou",
+      "destino": "quy-nhon",
+      "peso": 1323,
+      "cabo": "Asia Direct Cable (ADC)",
+      "fontes": [
+        "adc"
+      ]
+    },
+    {
+      "origem": "quy-nhon",
+      "destino": "batangas",
+      "peso": 1279,
+      "cabo": "Asia Direct Cable (ADC)",
+      "fontes": [
+        "adc"
+      ]
+    },
+    {
+      "origem": "batangas",
+      "destino": "sriracha",
+      "peso": 2177,
+      "cabo": "Asia Direct Cable (ADC)",
+      "fontes": [
+        "adc"
+      ]
+    },
+    {
+      "origem": "sriracha",
+      "destino": "singapore",
+      "peso": 1352,
+      "cabo": "Asia Direct Cable (ADC)",
+      "fontes": [
+        "adc"
+      ]
+    },
+    {
+      "origem": "chiba",
+      "destino": "batangas",
+      "peso": 3040,
+      "cabo": "Asia Direct Cable (ADC)",
+      "fontes": [
+        "adc"
+      ]
+    },
+    {
+      "origem": "hong-kong",
+      "destino": "singapore",
+      "peso": 2586,
+      "cabo": "Asia Direct Cable (ADC)",
+      "fontes": [
+        "adc"
+      ]
+    },
+    {
+      "origem": "quy-nhon",
+      "destino": "singapore",
+      "peso": 1504,
+      "cabo": "Asia Direct Cable (ADC)",
+      "fontes": [
+        "adc"
+      ]
+    },
+    {
+      "origem": "singapore",
+      "destino": "vung-tau",
+      "peso": 1072,
+      "cabo": "Asia-America Gateway (AAG)",
+      "fontes": [
+        "aag"
+      ]
+    },
+    {
+      "origem": "vung-tau",
+      "destino": "brunei",
+      "peso": 1056,
+      "cabo": "Asia-America Gateway (AAG)",
+      "fontes": [
+        "aag"
+      ]
+    },
+    {
+      "origem": "brunei",
+      "destino": "sriracha",
+      "peso": 1791,
+      "cabo": "Asia-America Gateway (AAG)",
+      "fontes": [
+        "aag"
+      ]
+    },
+    {
+      "origem": "sriracha",
+      "destino": "hong-kong",
+      "peso": 1730,
+      "cabo": "Asia-America Gateway (AAG)",
+      "fontes": [
+        "aag"
+      ]
+    },
+    {
+      "origem": "hong-kong",
+      "destino": "guam",
+      "peso": 3369,
+      "cabo": "Asia-America Gateway (AAG)",
+      "fontes": [
+        "aag"
+      ]
+    },
+    {
+      "origem": "sriracha",
+      "destino": "guam",
+      "peso": 4729,
+      "cabo": "Asia-America Gateway (AAG)",
+      "fontes": [
+        "aag"
+      ]
+    },
+    {
+      "origem": "guam",
+      "destino": "makaha",
+      "peso": 6089,
+      "cabo": "Asia-America Gateway (AAG)",
+      "fontes": [
+        "aag"
+      ]
+    },
+    {
+      "origem": "singapore",
+      "destino": "guam",
+      "peso": 4694,
+      "cabo": "Asia-America Gateway (AAG)",
+      "fontes": [
+        "aag"
+      ]
+    },
+    {
+      "origem": "hong-kong",
+      "destino": "vung-tau",
+      "peso": 1521,
+      "cabo": "Asia-America Gateway (AAG)",
+      "fontes": [
+        "aag"
+      ]
+    },
+    {
+      "origem": "brunei",
+      "destino": "guam",
+      "peso": 3398,
+      "cabo": "Asia-America Gateway (AAG)",
+      "fontes": [
+        "aag"
+      ]
+    },
+    {
+      "origem": "los-angeles",
+      "destino": "guam",
+      "peso": 9800,
+      "cabo": "SEA-US",
+      "fontes": [
+        "sea-us"
+      ]
+    },
+    {
+      "origem": "guam",
+      "destino": "yap",
+      "peso": 840,
+      "cabo": "SEA-US",
+      "fontes": [
+        "sea-us"
+      ]
+    },
+    {
+      "origem": "yap",
+      "destino": "palau",
+      "peso": 445,
+      "cabo": "SEA-US",
+      "fontes": [
+        "sea-us"
+      ]
+    },
+    {
+      "origem": "palau",
+      "destino": "davao",
+      "peso": 1012,
+      "cabo": "SEA-US",
+      "fontes": [
+        "sea-us"
+      ]
+    },
+    {
+      "origem": "davao",
+      "destino": "kauditan",
+      "peso": 648,
+      "cabo": "SEA-US",
+      "fontes": [
+        "sea-us"
+      ]
+    },
+    {
+      "origem": "kauditan",
+      "destino": "los-angeles",
+      "peso": 12338,
+      "cabo": "SEA-US",
+      "fontes": [
+        "sea-us"
+      ]
+    },
+    {
+      "origem": "guam",
+      "destino": "davao",
+      "peso": 2216,
+      "cabo": "SEA-US",
+      "fontes": [
+        "sea-us"
+      ]
+    },
+    {
+      "origem": "sydney",
+      "destino": "port-moresby",
+      "peso": 2747,
+      "cabo": "Coral Sea Cable System",
+      "fontes": [
+        "coral-sea"
+      ]
+    },
+    {
+      "origem": "port-moresby",
+      "destino": "honiara",
+      "peso": 1403,
+      "cabo": "Coral Sea Cable System",
+      "fontes": [
+        "coral-sea"
+      ]
+    },
+    {
+      "origem": "honiara",
+      "destino": "auki",
+      "peso": 110,
+      "cabo": "Coral Sea Cable System",
+      "fontes": [
+        "coral-sea"
+      ]
+    },
+    {
+      "origem": "honiara",
+      "destino": "noro",
+      "peso": 334,
+      "cabo": "Coral Sea Cable System",
+      "fontes": [
+        "coral-sea"
+      ]
+    },
+    {
+      "origem": "honiara",
+      "destino": "taro",
+      "peso": 497,
+      "cabo": "Coral Sea Cable System",
+      "fontes": [
+        "coral-sea"
+      ]
+    },
+    {
+      "origem": "auki",
+      "destino": "noro",
+      "peso": 390,
+      "cabo": "Coral Sea Cable System",
+      "fontes": [
+        "coral-sea"
+      ]
+    },
+    {
+      "origem": "auki",
+      "destino": "taro",
+      "peso": 527,
+      "cabo": "Coral Sea Cable System",
+      "fontes": [
+        "coral-sea"
+      ]
+    },
+    {
+      "origem": "sydney",
+      "destino": "honiara",
+      "peso": 2860,
+      "cabo": "Coral Sea Cable System",
+      "fontes": [
+        "coral-sea"
+      ]
+    },
+    {
+      "origem": "sydney",
+      "destino": "mangawhai",
+      "peso": 2138,
+      "cabo": "Hawaiki",
+      "fontes": [
+        "hawaiki"
+      ]
+    },
+    {
+      "origem": "mangawhai",
+      "destino": "pago-pago",
+      "peso": 2837,
+      "cabo": "Hawaiki",
+      "fontes": [
+        "hawaiki"
+      ]
+    },
+    {
+      "origem": "pago-pago",
+      "destino": "neiafu",
+      "peso": 599,
+      "cabo": "Hawaiki",
+      "fontes": [
+        "hawaiki"
+      ]
+    },
+    {
+      "origem": "neiafu",
+      "destino": "makaha",
+      "peso": 4780,
+      "cabo": "Hawaiki",
+      "fontes": [
+        "hawaiki"
+      ]
+    },
+    {
+      "origem": "mangawhai",
+      "destino": "makaha",
+      "peso": 7014,
+      "cabo": "Hawaiki",
+      "fontes": [
+        "hawaiki"
+      ]
+    },
+    {
+      "origem": "sydney",
+      "destino": "pago-pago",
+      "peso": 4401,
+      "cabo": "Hawaiki",
+      "fontes": [
+        "hawaiki"
+      ]
+    },
+    {
+      "origem": "pago-pago",
+      "destino": "makaha",
+      "peso": 4202,
+      "cabo": "Hawaiki",
+      "fontes": [
+        "hawaiki"
+      ]
+    },
+    {
+      "origem": "suva",
+      "destino": "apia",
+      "peso": 1151,
+      "cabo": "Tui-Samoa",
+      "fontes": [
+        "tui-samoa"
+      ]
+    },
+    {
+      "origem": "apia",
+      "destino": "rarotonga",
+      "peso": 1511,
+      "cabo": "Manatua",
+      "fontes": [
+        "manatua"
+      ]
+    },
+    {
+      "origem": "rarotonga",
+      "destino": "aitutaki",
+      "peso": 265,
+      "cabo": "Manatua",
+      "fontes": [
+        "manatua"
+      ]
+    },
+    {
+      "origem": "aitutaki",
+      "destino": "alofi",
+      "peso": 1066,
+      "cabo": "Manatua",
+      "fontes": [
+        "manatua"
+      ]
+    },
+    {
+      "origem": "alofi",
+      "destino": "tahiti",
+      "peso": 2177,
+      "cabo": "Manatua",
+      "fontes": [
+        "manatua"
+      ]
+    },
+    {
+      "origem": "tahiti",
+      "destino": "apia",
+      "peso": 2437,
+      "cabo": "Manatua",
+      "fontes": [
+        "manatua"
+      ]
+    },
+    {
+      "origem": "rarotonga",
+      "destino": "tahiti",
+      "peso": 1163,
+      "cabo": "Manatua",
+      "fontes": [
+        "manatua"
+      ]
+    },
+    {
+      "origem": "auckland",
+      "destino": "suva",
+      "peso": 2111,
+      "cabo": "Southern Cross NEXT",
+      "fontes": [
+        "southern-cross-next"
+      ]
+    },
+    {
+      "origem": "suva",
+      "destino": "sydney",
+      "peso": 3218,
+      "cabo": "Southern Cross NEXT",
+      "fontes": [
+        "southern-cross-next"
+      ]
+    },
+    {
+      "origem": "suva",
+      "destino": "nukunonu",
+      "peso": 1444,
+      "cabo": "Southern Cross NEXT",
+      "fontes": [
+        "southern-cross-next"
+      ]
+    },
+    {
+      "origem": "iceland",
+      "destino": "nuuk",
+      "peso": 1512,
+      "cabo": "Greenland Connect",
+      "fontes": [
+        "greenland-connect"
+      ]
+    },
+    {
+      "origem": "nuuk",
+      "destino": "qaqortoq",
+      "peso": 483,
+      "cabo": "Greenland Connect",
+      "fontes": [
+        "greenland-connect"
+      ]
+    },
+    {
+      "origem": "qaqortoq",
+      "destino": "milton-nl",
+      "peso": 1544,
+      "cabo": "Greenland Connect",
+      "fontes": [
+        "greenland-connect"
+      ]
+    },
+    {
+      "origem": "milton-nl",
+      "destino": "iceland",
+      "peso": 2750,
+      "cabo": "Greenland Connect",
+      "fontes": [
+        "greenland-connect"
+      ]
+    },
+    {
+      "origem": "nuuk",
+      "destino": "maniitsoq",
+      "peso": 148,
+      "cabo": "Greenland Connect North",
+      "fontes": [
+        "greenland-connect-north"
+      ]
+    },
+    {
+      "origem": "maniitsoq",
+      "destino": "sisimiut",
+      "peso": 173,
+      "cabo": "Greenland Connect North",
+      "fontes": [
+        "greenland-connect-north"
+      ]
+    },
+    {
+      "origem": "sisimiut",
+      "destino": "aasiaat",
+      "peso": 200,
+      "cabo": "Greenland Connect North",
+      "fontes": [
+        "greenland-connect-north"
+      ]
+    },
+    {
+      "origem": "iceland",
+      "destino": "ireland-west",
+      "peso": 1350,
+      "cabo": "IRIS",
+      "fontes": [
+        "iris"
+      ]
+    },
+    {
+      "origem": "ireland-west",
+      "destino": "bellport",
+      "peso": 4842,
+      "cabo": "AEC-1",
+      "fontes": [
+        "aec-1"
+      ]
+    },
+    {
+      "origem": "iceland",
+      "destino": "faroe-islands",
+      "peso": 697,
+      "cabo": "FARICE-1",
+      "fontes": [
+        "farice-1"
+      ]
+    },
+    {
+      "origem": "lagos",
+      "destino": "luanda",
+      "peso": 2031,
+      "cabo": "2Africa",
+      "fontes": [
+        "2africa"
+      ]
+    },
+    {
+      "origem": "pointe-noire",
+      "destino": "yzerfontein",
+      "peso": 3243,
+      "cabo": "2Africa",
+      "fontes": [
+        "2africa"
+      ]
+    },
+    {
+      "origem": "mombasa",
+      "destino": "berbera",
+      "peso": 1716,
+      "cabo": "2Africa",
+      "fontes": [
+        "2africa"
+      ]
+    },
+    {
+      "origem": "djibouti",
+      "destino": "port-said",
+      "peso": 2457,
+      "cabo": "2Africa",
+      "fontes": [
+        "2africa"
+      ]
+    },
+    {
+      "origem": "jeddah",
+      "destino": "karachi",
+      "peso": 2862,
+      "cabo": "2Africa",
+      "fontes": [
+        "2africa"
+      ]
+    },
+    {
+      "origem": "salalah",
+      "destino": "mumbai",
+      "peso": 1998,
+      "cabo": "2Africa",
+      "fontes": [
+        "2africa"
+      ]
+    },
+    {
+      "origem": "shantou",
+      "destino": "batangas",
+      "peso": 1162,
+      "cabo": "Asia Direct Cable (ADC)",
+      "fontes": [
+        "adc"
+      ]
+    },
+    {
+      "origem": "hong-kong",
+      "destino": "quy-nhon",
+      "peso": 1084,
+      "cabo": "Asia Direct Cable (ADC)",
+      "fontes": [
+        "adc"
+      ]
+    },
+    {
+      "origem": "vung-tau",
+      "destino": "guam",
+      "peso": 4096,
+      "cabo": "Asia-America Gateway (AAG)",
+      "fontes": [
+        "aag"
+      ]
+    },
+    {
+      "origem": "singapore",
+      "destino": "brunei",
+      "peso": 1296,
+      "cabo": "Asia-America Gateway (AAG)",
+      "fontes": [
+        "aag"
+      ]
+    }
   ]
 }
