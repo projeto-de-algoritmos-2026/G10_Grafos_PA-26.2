@@ -1,7 +1,7 @@
 # Benchmark: Dijkstra x Bellman-Ford
 
 Comparação empírica de tempo de execução dos dois algoritmos de caminho mínimo do
-simulador, sobre grafos sintéticos de tamanho crescente.
+simulador, sobre grafos sintéticos de tamanho crescente e sobre a malha mundial real.
 
 Reproduzir:
 
@@ -16,15 +16,15 @@ Saídas em `docs/benchmark/`: `benchmark.csv` (dados brutos, uma linha por execu
 
 | | |
 |---|---|
-| Data | 2026-08-30 23:47 UTC |
-| CPU | 12th Gen Intel(R) Core(TM) i7-1255U (12 núcleos) |
-| SO / Python | Linux 7.1.9-arch1-2 / CPython 3.12.13 |
+| Data | 2026-09-06 15:31 UTC |
+| CPU | AMD64 Family 23 Model 24 Stepping 1, AuthenticAMD (8 núcleos) |
+| SO / Python | Windows 11 / CPython 3.12.10 |
 | Tamanhos (V) | 10, 50, 100, 500, 1000 |
 | Amostras | 3 grafos distintos por tamanho × 3 repetições por grafo |
 | Relógio | `time.perf_counter()` em volta da chamada do algoritmo |
 | Semente | 42 (derivada por topologia/tamanho/amostra — cada grafo é reproduzível) |
 
-Duas topologias, ambas com pesos uniformes em [1, 100]:
+As duas topologias sintéticas usam pesos uniformes em [1, 100]:
 
 - **aleatória** — grafo esparso conexo com grau médio 4 (E ≈ 2V). É o formato que se
   parece com a malha do simulador: poucos cabos por nó e caminhos alternativos.
@@ -33,8 +33,11 @@ Duas topologias, ambas com pesos uniformes em [1, 100]:
   "sem rota".
 - **caminho** — grafo em linha reta, com os nós inseridos na ordem inversa do
   caminho. Serve para expor o pior caso do Bellman-Ford (explicado abaixo).
+- **real** — os 100 nós e 180 arestas de `backend/data/rede.json`, na consulta fixa
+  Praia Grande → Chiba. É medida uma vez, com três repetições, pois não há sorteio de
+  grafo nessa topologia.
 
-Em todas as 30 combinações medidas os dois algoritmos devolveram exatamente o mesmo
+Em todas as 31 combinações medidas os dois algoritmos devolveram exatamente o mesmo
 custo de rota — a comparação é de desempenho entre implementações que concordam no
 resultado, não entre respostas diferentes.
 
@@ -46,21 +49,27 @@ Tempo médio por execução (s):
 
 | V | E | Dijkstra | Bellman-Ford | razão |
 |---:|---:|---:|---:|---:|
-| 10 | 20 | 0.000057 | 0.000051 | 0.9× |
-| 50 | 100 | 0.000215 | 0.000244 | 1.1× |
-| 100 | 200 | 0.000509 | 0.000489 | 1.0× |
-| 500 | 1000 | 0.003062 | 0.003505 | 1.1× |
-| 1000 | 2000 | 0.006036 | 0.008176 | 1.4× |
+| 10 | 20 | 0.000065 | 0.000064 | 1.0× |
+| 50 | 100 | 0.000246 | 0.000328 | 1.3× |
+| 100 | 200 | 0.000565 | 0.000709 | 1.3× |
+| 500 | 1000 | 0.003492 | 0.005105 | 1.5× |
+| 1000 | 2000 | 0.005174 | 0.010657 | 2.1× |
 
 ### Topologia caminho (E = V-1)
 
 | V | E | Dijkstra | Bellman-Ford | razão |
 |---:|---:|---:|---:|---:|
-| 10 | 9 | 0.000039 | 0.000045 | 1.1× |
-| 50 | 49 | 0.000152 | 0.000503 | 3.3× |
-| 100 | 99 | 0.000298 | 0.001834 | 6.1× |
-| 500 | 499 | 0.001877 | 0.051190 | 27.3× |
-| 1000 | 999 | 0.003540 | 0.217266 | 61.4× |
+| 10 | 9 | 0.000040 | 0.000056 | 1.4× |
+| 50 | 49 | 0.000188 | 0.000818 | 4.4× |
+| 100 | 99 | 0.000367 | 0.003420 | 9.3× |
+| 500 | 499 | 0.002093 | 0.084236 | 40.3× |
+| 1000 | 999 | 0.004724 | 0.349873 | 74.1× |
+
+### Topologia real
+
+| V | E | consulta | Dijkstra | Bellman-Ford | razão |
+|---:|---:|---|---:|---:|---:|
+| 100 | 180 | Praia Grande → Chiba | 0.000548 | 0.000679 | 1.2× |
 
 ![Tempo de execução por tamanho do grafo](tempo_por_tamanho.png)
 
@@ -69,19 +78,21 @@ V = 100 → 1000 (tempo ∝ V^expoente):
 
 | topologia | Dijkstra | Bellman-Ford |
 |---|---:|---:|
-| aleatória | 1.07 | 1.22 |
-| caminho | 1.07 | 2.07 |
+| aleatória | 0.96 | 1.18 |
+| caminho | 1.11 | 2.01 |
 
 ## Empírico x teórico
 
-**Dijkstra bate com a teoria nos dois casos.** O esperado é O((V+E) log V); com
-E ∝ V isso dá V log V, cujo expoente aparente em log-log fica pouco acima de 1 na
-faixa medida. O medido é 1.07 nas duas topologias — dentro do esperado.
+O esperado para Dijkstra é O((V+E) log V); com E ∝ V isso dá V log V. O expoente
+medido foi 1.11 no caminho. Na topologia aleatória ficou em 0.96: origem e destino
+sorteados fazem a saída antecipada visitar apenas parte do grafo, e a faixa curta de
+tamanhos e o ruído de uma máquina compartilhada tornam essa inclinação uma estimativa,
+não uma prova da cota assintótica.
 
-**Bellman-Ford só bate com a teoria na topologia caminho.** O esperado é O(V·E), que
-com E ∝ V dá O(V²), ou seja expoente 2. Medido: **2.07** no caminho — confere. Mas na
-topologia aleatória o expoente medido é **1.22**, longe de 2, e o algoritmo empata com
-o Dijkstra até V = 500.
+**Bellman-Ford só se aproxima do pior caso na topologia caminho.** O esperado é
+O(V·E), que com E ∝ V dá O(V²), ou seja expoente 2. Medido: **2.01** no caminho. Na
+topologia aleatória o expoente medido é **1.18**, longe de 2, e o algoritmo fica
+próximo do Dijkstra nos tamanhos menores.
 
 A divergência não é erro de medição, é consequência de uma otimização na nossa
 implementação (`backend/algorithms/bellman_ford.py`): **o relaxamento para assim que
@@ -94,12 +105,12 @@ Isso explica os dois números:
 
 - Em grafo aleatório esparso o diâmetro cresce como O(log V), não como V. O custo real
   vira O(E · log V) em vez de O(V · E), e o expoente cai de 2 para perto de 1 —
-  compatível com o 1.22 medido.
+  compatível com o 1.18 medido.
 - Na topologia caminho o diâmetro **é** V-1, e a ordem de inserção dos nós foi
   escolhida de propósito para ser adversa: o Bellman-Ford relaxa as arestas na ordem
   em que os nós foram inseridos, então cada rodada avança um único salto. Nesse
   cenário a saída antecipada não ajuda, as V-1 rodadas acontecem de fato, e o O(V·E)
-  aparece inteiro — daí o expoente 2.07 e a razão de 61× contra o Dijkstra em V = 1000.
+  aparece inteiro — daí o expoente 2.01 e a razão de 74× contra o Dijkstra em V = 1000.
 
 Ou seja: a cota O(V·E) do Bellman-Ford está correta como **pior caso**, mas é
 pessimista para o caso médio de uma malha esparsa. A medição na topologia aleatória
@@ -108,8 +119,9 @@ isso que a topologia caminho entrou no benchmark.
 
 ## O que isso significa para o simulador
 
-Para a malha do projeto (dezenas de nós, esparsa, pesos = latência, sempre positivos)
-a diferença de tempo entre os dois é irrelevante — na casa de dezenas de microssegundos.
+Para a malha do projeto (100 nós, esparsa, pesos geodésicos sempre positivos), a
+diferença de tempo entre os dois é irrelevante para a interação — ambos ficaram perto
+de um milissegundo na consulta real medida.
 A escolha entre eles no `POST /rota` é de demonstração didática, não de desempenho.
 O Dijkstra continua sendo o padrão porque é o que degrada melhor se a malha crescer, e
 o Bellman-Ford segue disponível por aceitar peso negativo, que o Dijkstra rejeita.
@@ -119,7 +131,7 @@ o Bellman-Ford segue disponível por aceitar peso negativo, que o Dijkstra rejei
 - Máquina única, sem isolamento de CPU: os números absolutos não são comparáveis com
   outro hardware. As taxas de crescimento (expoentes) são o resultado transferível.
 - V = 1000 é o maior tamanho medido. A curva do Bellman-Ford na topologia caminho já
-  chega a 0.2 s por execução ali; tamanhos maiores custariam minutos de benchmark sem
+  chega a 0.35 s por execução ali; tamanhos maiores custariam minutos de benchmark sem
   mudar a conclusão.
 - Ambos os algoritmos têm saída antecipada (o Dijkstra para ao remover o destino da
   fila), então os tempos medidos são de uma consulta origem→destino, não do cálculo da
