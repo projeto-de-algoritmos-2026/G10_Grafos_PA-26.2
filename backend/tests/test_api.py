@@ -73,6 +73,30 @@ def test_grafo_publica_topologia_completa_e_ativa(client: TestClient):
     assert corpo["rota_atual"] is None
 
 
+def test_criticidade_da_rede_sem_ponto_unico_de_falha(client: TestClient):
+    """A rede de teste e formada por dois triangulos compartilhando o cabo B-C."""
+    resposta = client.get("/analise/criticidade")
+
+    assert resposta.status_code == 200
+    assert resposta.json() == {"articulacoes": [], "pontes": [], "componentes": 2}
+
+
+def test_criticidade_reflete_falhas_ativas(client: TestClient):
+    """Derrubar B colapsa os dois triangulos em um caminho A-C-D: C fica critico."""
+    client.post("/nos/B/derrubar")
+
+    resposta = client.get("/analise/criticidade")
+
+    assert resposta.status_code == 200
+    corpo = resposta.json()
+    assert corpo["articulacoes"] == ["C"]
+    assert {(ponte["origem"], ponte["destino"]) for ponte in corpo["pontes"]} == {
+        ("A", "C"),
+        ("C", "D"),
+    }
+    assert corpo["componentes"] == 2
+
+
 def test_grafo_publica_a_ultima_rota_calculada(client: TestClient):
     client.post("/rota", json={"origem": "A", "destino": "D", "algoritmo": "dijkstra"})
 
@@ -280,15 +304,21 @@ def test_openapi_documenta_todos_os_endpoints_tipados(client: TestClient):
     assert set(schema["paths"]) == {
         "/status",
         "/grafo",
+        "/analise/criticidade",
         "/rota",
         "/nos/{no_id}/derrubar",
         "/nos/{no_id}/restaurar",
         "/arestas/derrubar",
         "/arestas/restaurar",
     }
-    assert {"GrafoState", "RotaAtual", "RotaRequest", "RotaResult", "ArestaRequest"} <= set(
-        schema["components"]["schemas"]
-    )
+    assert {
+        "GrafoState",
+        "RotaAtual",
+        "RotaRequest",
+        "RotaResult",
+        "ArestaRequest",
+        "CriticidadeResult",
+    } <= set(schema["components"]["schemas"])
 
 
 def test_dataset_real_carrega_metadados_e_permite_rota_global():

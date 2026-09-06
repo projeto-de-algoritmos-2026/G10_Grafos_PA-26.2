@@ -8,6 +8,7 @@ const elements = {
   libraryStatus: document.querySelector("#library-status"),
   routeDescription: document.querySelector("#route-description"),
   routeDetails: document.querySelector("#route-details"),
+  criticalityDetails: document.querySelector("#criticality-details"),
   originSelect: document.querySelector("#origin-select"),
   destinationSelect: document.querySelector("#destination-select"),
   algoDijkstra: document.querySelector("#algo-dijkstra"),
@@ -15,29 +16,36 @@ const elements = {
   resetButton: document.querySelector("#reset-button"),
 };
 
-const PROJECTION_SCALE = 6;
-const ROUTE_FLASH_COLOR = "#fff3b0";
+const ROUTE_FLASH_COLOR = "#f2e6c2";
 const ROUTE_FLASH_DURATION_MS = 500;
+const GLOBE_BACKGROUND_COLOR = "#080b09";
+const GLOBE_ATMOSPHERE_COLOR = "#6fb98a";
+// Os cabos sao submarinos: um arco baixo acompanha a curvatura do globo em vez
+// de disparar para fora dele, o que deixava as ligacoes longas soltas no espaco.
+const ARC_ALTITUDE_AUTO_SCALE = 0.12;
+const COUNTRIES_GEOJSON_URL =
+  "https://unpkg.com/globe.gl@2.27.1/example/datasets/ne_110m_admin_0_countries.geojson";
 const COLORS = {
-  node: "#49bfa1",
-  nodeBorder: "#b5f4e3",
-  down: "#d65f67",
-  downBorder: "#ffb5ba",
-  origin: "#42df88",
-  originBorder: "#d0ffe3",
-  destination: "#f4bd5f",
-  destinationBorder: "#ffedbd",
-  sameEndpoint: "#b993ff",
-  edge: "#52736d",
-  edgeDown: "#b2525a",
-  route: "#ffd166",
+  node: "#6fb98a",
+  down: "#cf7a72",
+  origin: "#8fd8a8",
+  destination: "#d2b06a",
+  sameEndpoint: "#7fb8c9",
+  edge: "#3f7a5c",
+  edgeDown: "#6b3b38",
+  route: "#e0c07a",
+  articulation: "#d2a24c",
+  bridge: "#d2a24c",
+  landFill: "rgba(111, 185, 138, 0.09)",
+  landStroke: "rgba(125, 175, 145, 0.42)",
 };
 
-let visualization;
+let globeInstance;
 let resizeObserver;
-let nodesDataSet;
-let edgesDataSet;
 let currentGraph;
+let currentCriticidade = { articulacoes: [], pontes: [], componentes: 0 };
+let countryFeatures = [];
+let flashedEdgeIds = new Set();
 
 const currentSelection = {
   origem: null,
@@ -63,84 +71,187 @@ function currentRouteEdges(route) {
   return edges;
 }
 
-function projectCoordinates(node) {
-  return {
-    x: node.lon * PROJECTION_SCALE,
-    y: -node.lat * PROJECTION_SCALE,
-  };
+function articulationPointIds() {
+  return new Set(currentCriticidade.articulacoes);
 }
 
-function nodeColors(node, route) {
+function bridgeEdgeIds() {
+  return new Set(currentCriticidade.pontes.map((ponte) => edgeKey(ponte.origem, ponte.destino)));
+}
+
+function pointColorFor(node, route) {
   const isOrigin = route?.origem === node.id;
   const isDestination = route?.destino === node.id;
 
   if (isOrigin && isDestination) {
-    return { background: COLORS.sameEndpoint, border: "#eadcff" };
+    return COLORS.sameEndpoint;
   }
   if (isOrigin) {
-    return { background: COLORS.origin, border: COLORS.originBorder };
+    return COLORS.origin;
   }
   if (isDestination) {
-    return { background: COLORS.destination, border: COLORS.destinationBorder };
+    return COLORS.destination;
   }
   if (!node.ativo) {
-    return { background: COLORS.down, border: COLORS.downBorder };
+    return COLORS.down;
   }
-  return { background: COLORS.node, border: COLORS.nodeBorder };
+  return COLORS.node;
 }
 
-function toVisNodes(graph) {
+function buildGridTexture() {
+  const canvas = document.createElement("canvas");
+  canvas.width = 1024;
+  canvas.height = 512;
+  const ctx = canvas.getContext("2d");
+
+  ctx.fillStyle = "#0b120e";
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  ctx.strokeStyle = "rgba(125, 175, 145, 0.16)";
+  ctx.lineWidth = 1;
+  const step = 32;
+  for (let x = 0; x <= canvas.width; x += step) {
+    ctx.beginPath();
+    ctx.moveTo(x, 0);
+    ctx.lineTo(x, canvas.height);
+    ctx.stroke();
+  }
+  for (let y = 0; y <= canvas.height; y += step) {
+    ctx.beginPath();
+    ctx.moveTo(0, y);
+    ctx.lineTo(canvas.width, y);
+    ctx.stroke();
+  }
+
+  ctx.strokeStyle = "rgba(125, 175, 145, 0.34)";
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(0, canvas.height / 2);
+  ctx.lineTo(canvas.width, canvas.height / 2);
+  ctx.stroke();
+
+  return canvas.toDataURL("image/png");
+}
+
+async function fetchCountries() {
+  // Os contornos sao apenas referencia visual: se a CDN falhar, o globo
+  // continua funcional sem eles em vez de derrubar a visualizacao inteira.
+  try {
+    const response = await fetch(COUNTRIES_GEOJSON_URL);
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`);
+    }
+    const geojson = await response.json();
+    return geojson.features ?? [];
+  } catch (error) {
+    console.warn("Contornos dos continentes indisponíveis:", error);
+    return [];
+  }
+}
+
+function toGlobePoints(graph) {
+  const articulationPoints = articulationPointIds();
+
   return graph.nos.map((node) => {
-    const position = projectCoordinates(node);
-    const color = nodeColors(node, graph.rota_atual);
-    const isEndpoint =
-      graph.rota_atual?.origem === node.id || graph.rota_atual?.destino === node.id;
+    const route = graph.rota_atual;
+    const isEndpoint = route?.origem === node.id || route?.destino === node.id;
+    const isArticulation = articulationPoints.has(node.id);
 
     return {
       id: node.id,
-      label: node.nome.split(",")[0],
-      title: `${node.nome}<br>${node.lat.toFixed(2)}°, ${node.lon.toFixed(2)}°<br>${
-        node.ativo ? "Ativo" : "Derrubado"
-      }`,
-      ...position,
-      fixed: { x: true, y: true },
-      size: isEndpoint ? 18 : 13,
-      borderWidth: isEndpoint ? 4 : 2,
-      color: {
-        ...color,
-        highlight: color,
-        hover: color,
-      },
+      lat: node.lat,
+      lng: node.lon,
+      nome: node.nome,
+      ativo: node.ativo,
+      isArticulation,
+      color: pointColorFor(node, route),
+      radius: isEndpoint ? 0.55 : 0.35,
     };
   });
 }
 
-function toVisEdges(graph) {
+function toGlobeRings(points) {
+  return points
+    .filter((point) => point.isArticulation && point.ativo)
+    .map((point) => ({ lat: point.lat, lng: point.lng }));
+}
+
+function toGlobeArcs(graph) {
+  const nodesById = new Map(graph.nos.map((node) => [node.id, node]));
   const routeEdges = currentRouteEdges(graph.rota_atual);
+  const bridgeEdges = bridgeEdgeIds();
 
-  return graph.arestas.map((edge) => {
-    const id = edgeKey(edge.origem, edge.destino);
-    const belongsToRoute = routeEdges.has(id);
-    const color = belongsToRoute
-      ? COLORS.route
-      : edge.ativo
-        ? COLORS.edge
-        : COLORS.edgeDown;
+  return graph.arestas
+    .map((edge) => {
+      const origin = nodesById.get(edge.origem);
+      const destination = nodesById.get(edge.destino);
+      if (!origin || !destination) {
+        return null;
+      }
 
-    return {
-      id,
-      from: edge.origem,
-      to: edge.destino,
-      title: `${edge.cabo}<br>${Math.round(edge.peso).toLocaleString("pt-BR")} km<br>${
-        edge.ativo ? "Ativa" : "Derrubada"
-      }`,
-      width: belongsToRoute ? 5 : edge.ativo ? 1.5 : 2,
-      color: { color, highlight: color, hover: color, opacity: edge.ativo ? 1 : 0.75 },
-      dashes: !edge.ativo,
-      smooth: false,
-      chosen: false,
-    };
-  });
+      const id = edgeKey(edge.origem, edge.destino);
+      const belongsToRoute = routeEdges.has(id);
+      const isBridge = bridgeEdges.has(id);
+      const isFlashed = flashedEdgeIds.has(id);
+
+      let color = edge.ativo ? COLORS.edge : COLORS.edgeDown;
+      if (isBridge) {
+        color = COLORS.bridge;
+      }
+      if (belongsToRoute) {
+        color = COLORS.route;
+      }
+      if (isFlashed) {
+        color = ROUTE_FLASH_COLOR;
+      }
+
+      // Tracos curtos: um padrao longo deixaria so dois segmentos por arco, que
+      // a distancia parecem riscos soltos em vez de um cabo pontilhado.
+      let dashLength = 1;
+      let dashGap = 0;
+      let dashAnimateTime = 0;
+      if (belongsToRoute || isFlashed) {
+        dashLength = 0.3;
+        dashGap = 0.12;
+        dashAnimateTime = 1600;
+      } else if (!edge.ativo) {
+        dashLength = 0.06;
+        dashGap = 0.05;
+      } else if (isBridge) {
+        dashLength = 0.05;
+        dashGap = 0.035;
+      }
+
+      return {
+        id,
+        startLat: origin.lat,
+        startLng: origin.lon,
+        endLat: destination.lat,
+        endLng: destination.lon,
+        cabo: edge.cabo,
+        peso: edge.peso,
+        ativo: edge.ativo,
+        isBridge,
+        color,
+        stroke: belongsToRoute || isFlashed ? 0.55 : isBridge ? 0.38 : 0.25,
+        dashLength,
+        dashGap,
+        dashAnimateTime,
+      };
+    })
+    .filter(Boolean);
+}
+
+function pointLabel(point) {
+  return `${point.nome}<br>${point.lat.toFixed(2)}°, ${point.lng.toFixed(2)}°<br>${
+    point.ativo ? "Ativo" : "Derrubado"
+  }${point.isArticulation ? "<br>Ponto de articulação" : ""}`;
+}
+
+function arcLabel(arc) {
+  return `${arc.cabo}<br>${Math.round(arc.peso).toLocaleString("pt-BR")} km<br>${
+    arc.ativo ? "Ativa" : "Derrubada"
+  }${arc.isBridge ? "<br>Ponte (ponto único de falha)" : ""}`;
 }
 
 function renderRouteSummary(graph) {
@@ -172,69 +283,102 @@ function renderRouteSummary(graph) {
   }`;
 }
 
-function buildNetwork(graph) {
-  if (!window.vis?.Network || !window.vis?.DataSet) {
+function averageCoordinates(nodes) {
+  if (!nodes.length) {
+    return { lat: 0, lng: 0 };
+  }
+  const total = nodes.reduce(
+    (acc, node) => ({ lat: acc.lat + node.lat, lng: acc.lng + node.lon }),
+    { lat: 0, lng: 0 },
+  );
+  return { lat: total.lat / nodes.length, lng: total.lng / nodes.length };
+}
+
+function resizeGlobe() {
+  if (!globeInstance) {
+    return;
+  }
+  globeInstance.width(elements.network.clientWidth);
+  globeInstance.height(elements.network.clientHeight);
+}
+
+function buildGlobe(graph) {
+  if (typeof window.Globe !== "function") {
     throw new Error("A biblioteca de visualização não pôde ser carregada.");
   }
 
-  visualization?.destroy();
+  elements.network.innerHTML = "";
+
+  globeInstance = window
+    .Globe()(elements.network)
+    .width(elements.network.clientWidth)
+    .height(elements.network.clientHeight)
+    .backgroundColor(GLOBE_BACKGROUND_COLOR)
+    .globeImageUrl(buildGridTexture())
+    .showAtmosphere(true)
+    .atmosphereColor(GLOBE_ATMOSPHERE_COLOR)
+    .atmosphereAltitude(0.14)
+    .polygonsData(countryFeatures)
+    .polygonCapColor(() => COLORS.landFill)
+    .polygonSideColor(() => "rgba(0, 0, 0, 0)")
+    .polygonStrokeColor(() => COLORS.landStroke)
+    .polygonAltitude(0.006)
+    .polygonLabel(() => "")
+    .polygonsTransitionDuration(0)
+    .pointsMerge(false)
+    .pointAltitude(0.012)
+    .pointRadius((point) => point.radius)
+    .pointColor((point) => point.color)
+    .pointLabel(pointLabel)
+    .pointsTransitionDuration(200)
+    .onPointClick((point) => toggleNode(point.id))
+    .arcsTransitionDuration(0)
+    .arcAltitudeAutoScale(ARC_ALTITUDE_AUTO_SCALE)
+    .arcColor((arc) => arc.color)
+    .arcStroke((arc) => arc.stroke)
+    .arcDashLength((arc) => arc.dashLength)
+    .arcDashGap((arc) => arc.dashGap)
+    .arcDashAnimateTime((arc) => arc.dashAnimateTime)
+    .arcLabel(arcLabel)
+    .ringColor(() => (t) => `rgba(255, 153, 0, ${1 - t})`)
+    .ringMaxRadius(3.4)
+    .ringPropagationSpeed(2.2)
+    .ringRepeatPeriod(1500);
+
+  globeInstance.controls().autoRotate = true;
+  globeInstance.controls().autoRotateSpeed = 0.35;
+  globeInstance.controls().enableDamping = true;
+
+  const { lat, lng } = averageCoordinates(graph.nos);
+  globeInstance.pointOfView({ lat, lng, altitude: 1.85 }, 0);
+
+  updateGlobe(graph);
+
   resizeObserver?.disconnect();
-
-  nodesDataSet = new window.vis.DataSet(toVisNodes(graph));
-  edgesDataSet = new window.vis.DataSet(toVisEdges(graph));
-  const data = { nodes: nodesDataSet, edges: edgesDataSet };
-  const options = {
-    autoResize: true,
-    physics: false,
-    layout: { improvedLayout: false },
-    nodes: {
-      shape: "dot",
-      font: { color: "#e8f5f1", size: 13, strokeWidth: 4, strokeColor: "#071412" },
-    },
-    edges: { font: { color: "#e8f5f1" } },
-    interaction: {
-      dragNodes: false,
-      hover: true,
-      keyboard: true,
-      navigationButtons: true,
-      tooltipDelay: 120,
-    },
-  };
-
-  visualization = new window.vis.Network(elements.network, data, options);
-  visualization.fit({ animation: false });
-  visualization.on("click", handleNetworkClick);
-
   if (window.ResizeObserver) {
-    resizeObserver = new ResizeObserver(() => visualization?.fit({ animation: false }));
+    resizeObserver = new ResizeObserver(resizeGlobe);
     resizeObserver.observe(elements.network);
   }
 }
 
-function updateNetwork(graph) {
-  nodesDataSet.update(toVisNodes(graph));
-  edgesDataSet.update(toVisEdges(graph));
+function updateGlobe(graph) {
+  const points = toGlobePoints(graph);
+  globeInstance
+    .pointsData(points)
+    .arcsData(toGlobeArcs(graph))
+    .ringsData(toGlobeRings(points));
 }
 
 function flashRouteEdges(edgeIds) {
   if (!edgeIds.length) {
     return;
   }
-  edgesDataSet.update(
-    edgeIds.map((id) => ({
-      id,
-      width: 6,
-      color: { color: ROUTE_FLASH_COLOR, highlight: ROUTE_FLASH_COLOR, hover: ROUTE_FLASH_COLOR },
-    })),
-  );
-  window.setTimeout(() => updateNetwork(currentGraph), ROUTE_FLASH_DURATION_MS);
-}
-
-async function handleNetworkClick(params) {
-  if (!params.nodes.length) {
-    return;
-  }
-  await toggleNode(params.nodes[0]);
+  flashedEdgeIds = new Set(edgeIds);
+  updateGlobe(currentGraph);
+  window.setTimeout(() => {
+    flashedEdgeIds = new Set();
+    updateGlobe(currentGraph);
+  }, ROUTE_FLASH_DURATION_MS);
 }
 
 async function toggleNode(nodeId) {
@@ -253,6 +397,7 @@ async function toggleNode(nodeId) {
       throw new Error(`A API respondeu com HTTP ${response.status}.`);
     }
     currentGraph = await fetchGraph();
+    currentCriticidade = await fetchCriticidade();
     await recalculateAndRender();
   } catch (error) {
     showActionError(error);
@@ -290,13 +435,37 @@ async function refreshRoute() {
 
 async function recalculateAndRender() {
   const previousRouteEdges = await refreshRoute();
-  updateNetwork(currentGraph);
+  updateGlobe(currentGraph);
   renderRouteSummary(currentGraph);
+  renderCriticalitySummary();
 
   const newRouteEdges = [...currentRouteEdges(currentGraph.rota_atual)].filter(
     (edgeId) => !previousRouteEdges.has(edgeId),
   );
   flashRouteEdges(newRouteEdges);
+}
+
+function renderCriticalitySummary() {
+  const routerCount = currentCriticidade.articulacoes.length;
+  const cableCount = currentCriticidade.pontes.length;
+
+  if (routerCount === 0 && cableCount === 0) {
+    elements.criticalityDetails.textContent =
+      "Nenhum ponto único de falha identificado na rede disponível.";
+    return;
+  }
+
+  const routerLabel = routerCount === 1 ? "roteador" : "roteadores";
+  const cableLabel = cableCount === 1 ? "cabo" : "cabos";
+  const parts = [];
+  if (routerCount > 0) {
+    parts.push(`${routerCount} ${routerLabel}`);
+  }
+  if (cableCount > 0) {
+    parts.push(`${cableCount} ${cableLabel}`);
+  }
+  const verb = routerCount + cableCount === 1 ? "é" : "são";
+  elements.criticalityDetails.textContent = `${parts.join(" e ")} ${verb} ponto único de falha.`;
 }
 
 function populateEndpointSelects(graph) {
@@ -336,6 +505,7 @@ async function resetSimulation() {
       ),
     ]);
     currentGraph = await fetchGraph();
+    currentCriticidade = await fetchCriticidade();
     await recalculateAndRender();
   } catch (error) {
     showActionError(error);
@@ -403,14 +573,15 @@ function showGraph(graph) {
   currentSelection.destino = graph.rota_atual?.destino ?? currentSelection.destino;
   currentSelection.algoritmo = graph.rota_atual?.algoritmo ?? currentSelection.algoritmo;
 
-  buildNetwork(graph);
+  buildGlobe(graph);
   populateEndpointSelects(graph);
   setAlgorithm(currentSelection.algoritmo);
   bindControls();
   renderRouteSummary(graph);
+  renderCriticalitySummary();
   elements.nodeCount.textContent = graph.nos.length;
   elements.edgeCount.textContent = graph.arestas.length;
-  elements.libraryStatus.textContent = "vis-network ativa";
+  elements.libraryStatus.textContent = "globe.gl ativo";
   elements.status.textContent = "API conectada";
   elements.status.className = "status status-success";
   elements.error.hidden = true;
@@ -423,8 +594,8 @@ function showLoadError(error) {
   elements.status.className = "status status-error";
   elements.error.textContent = `Não foi possível carregar a topologia. ${error.message}`;
   elements.error.hidden = false;
-  visualization?.destroy();
   resizeObserver?.disconnect();
+  globeInstance = undefined;
   elements.network.setAttribute("aria-busy", "false");
   elements.network.innerHTML = `
     <div class="network-placeholder">
@@ -449,10 +620,28 @@ async function fetchGraph() {
   return graph;
 }
 
+async function fetchCriticidade() {
+  const response = await fetch("/analise/criticidade", {
+    headers: { Accept: "application/json" },
+  });
+
+  if (!response.ok) {
+    throw new Error(`A API respondeu com HTTP ${response.status}.`);
+  }
+
+  return response.json();
+}
+
 async function initialize() {
   try {
-    const graph = await fetchGraph();
+    const [graph, criticidade, countries] = await Promise.all([
+      fetchGraph(),
+      fetchCriticidade(),
+      fetchCountries(),
+    ]);
     console.info("Grafo recebido da API:", graph);
+    currentCriticidade = criticidade;
+    countryFeatures = countries;
     showGraph(graph);
   } catch (error) {
     showLoadError(error);

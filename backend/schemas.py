@@ -97,3 +97,18 @@ class StatusResponse(BaseModel):
     """Resposta do health-check."""
 
     status: Literal["ok"]
+
+
+class PonteState(BaseModel):
+    """Cabo cuja remocao aumenta o numero de componentes conexas da rede ativa."""
+
+    origem: str
+    destino: str
+
+
+class CriticidadeResult(BaseModel):
+    """Pontos unicos de falha da rede disponivel no momento da analise."""
+
+    articulacoes: list[str]
+    pontes: list[PonteState]
+    componentes: int
