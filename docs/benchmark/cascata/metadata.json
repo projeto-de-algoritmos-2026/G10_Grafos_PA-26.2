@@ -1,5 +1,5 @@
 {
-  "timestamp_utc": "2026-09-06 14:26:29 UTC",
+  "timestamp_utc": "2026-09-06 15:32:04 UTC",
   "cpu": "AMD64 Family 23 Model 24 Stepping 1, AuthenticAMD",
   "nucleos": 8,
   "so": "Windows 11",
@@ -10,13 +10,13 @@
     "articulacao"
   ],
   "passos_solicitados": null,
-  "passos_executados": 26,
+  "passos_executados": 100,
   "semente": 42,
-  "nos_iniciais": 26,
-  "arestas": 30,
-  "dataset": "backend\\data\\rede.json",
-  "dataset_sha256": "6d35da285ec32a7e505120a3a59809617558eff902c0e7ec9484da285e5a7872",
-  "tempo_execucao_s": 0.025081600062549114,
+  "nos_iniciais": 100,
+  "arestas": 180,
+  "dataset": "backend/data/rede.json",
+  "dataset_sha256": "e3945b5d5266dee98e439619ef1a1e9e3bd295903fc89911c4112ae4c90c586b",
+  "tempo_execucao_s": 1.914021800039336,
   "normalizacao": {
     "maior_componente": "tamanho da maior componente / nos ativos no inicio",
     "pares_alcancaveis": "pares alcancaveis / pares entre nos ativos no inicio",

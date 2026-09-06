@@ -1,4 +1,4 @@
-"""Benchmark empirico de Dijkstra x Bellman-Ford em grafos sinteticos.
+"""Benchmark empirico de Dijkstra x Bellman-Ford em grafos sinteticos e real.
 
 Gera grafos de tamanho crescente, mede o tempo real de cada algoritmo sobre
 exatamente os mesmos grafos e salva os dados brutos (CSV), o grafico e os
@@ -11,6 +11,7 @@ Uso:
 
 import argparse
 import csv
+import hashlib
 import json
 import os
 import platform
@@ -29,6 +30,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from backend.algorithms import RouteResult, bellman_ford, dijkstra  # noqa: E402
 from backend.graph import Network  # noqa: E402
+from backend.state import DATA_FILE, load_network  # noqa: E402
 
 SAIDA_PADRAO = Path(__file__).resolve().parents[1] / "docs" / "benchmark"
 TAMANHOS_PADRAO = (10, 50, 100, 500, 1000)
@@ -108,9 +110,15 @@ def gerar_caminho(tamanho: int, _grau_medio: float, rng: random.Random) -> tuple
     return network, ids[0], ids[-1]
 
 
+def gerar_real(_tamanho: int, _grau_medio: float, _rng: random.Random) -> tuple[Network, str, str]:
+    """Carrega uma consulta intercontinental fixa da topologia curada."""
+    return load_network(), "praia-grande", "chiba"
+
+
 TOPOLOGIAS: dict[str, Callable[[int, float, random.Random], tuple[Network, str, str]]] = {
     "aleatoria": gerar_aleatorio,
     "caminho": gerar_caminho,
+    "real": gerar_real,
 }
 
 
@@ -134,11 +142,14 @@ def medir(
     medicoes: list[Medicao] = []
     for topologia in topologias:
         gerar = TOPOLOGIAS[topologia]
-        for tamanho in tamanhos:
-            for amostra in range(amostras):
+        tamanhos_da_topologia = (0,) if topologia == "real" else tamanhos
+        amostras_da_topologia = 1 if topologia == "real" else amostras
+        for tamanho in tamanhos_da_topologia:
+            for amostra in range(amostras_da_topologia):
                 # Semente derivada: cada grafo e reproduzivel de forma independente.
-                rng = random.Random((seed, topologia, tamanho, amostra).__hash__())
+                rng = random.Random(_derived_seed(seed, topologia, tamanho, amostra))
                 network, origem, destino = gerar(tamanho, grau_medio, rng)
+                tamanho_medido = len(network.node_ids())
                 arestas = len(network.edges())
                 for nome, algoritmo in ALGORITMOS.items():
                     for repeticao in range(repeticoes):
@@ -148,7 +159,7 @@ def medir(
                         medicoes.append(
                             Medicao(
                                 topologia=topologia,
-                                tamanho=tamanho,
+                                tamanho=tamanho_medido,
                                 arestas=arestas,
                                 algoritmo=nome,
                                 amostra=amostra,
@@ -158,15 +169,21 @@ def medir(
                                 encontrada=resultado.found,
                             )
                         )
-            print(f"  {topologia} V={tamanho}: ok", flush=True)
+            print(f"  {topologia} V={tamanho_medido}: ok", flush=True)
     return medicoes
+
+
+def _derived_seed(seed: int, topology: str, size: int, sample: int) -> int:
+    """Deriva uma semente estavel, independente do hash aleatorio do Python."""
+    payload = f"{seed}\0{topology}\0{size}\0{sample}".encode()
+    return int.from_bytes(hashlib.sha256(payload).digest()[:8])
 
 
 def escrever_csv(medicoes: Sequence[Medicao], destino: Path) -> None:
     """Salva os dados brutos, sem agregacao, para permitir reanalise."""
     campos = list(asdict(medicoes[0]))
     with destino.open("w", encoding="utf-8", newline="") as arquivo:
-        writer = csv.DictWriter(arquivo, fieldnames=campos)
+        writer = csv.DictWriter(arquivo, fieldnames=campos, lineterminator="\n")
         writer.writeheader()
         writer.writerows(asdict(medicao) for medicao in medicoes)
 
@@ -253,6 +270,11 @@ def coletar_metadados(argumentos: argparse.Namespace) -> dict[str, object]:
         "amostras": argumentos.amostras,
         "repeticoes": argumentos.repeticoes,
         "seed": argumentos.seed,
+        "topologia_real": {
+            "dataset": DATA_FILE.relative_to(Path(__file__).resolve().parents[1]).as_posix(),
+            "origem": "praia-grande",
+            "destino": "chiba",
+        },
     }
 
 
@@ -276,7 +298,10 @@ def _parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
         nargs="+",
         choices=sorted(TOPOLOGIAS),
         default=sorted(TOPOLOGIAS),
-        help="aleatoria = malha esparsa conexa; caminho = pior caso do Bellman-Ford",
+        help=(
+            "aleatoria = malha esparsa conexa; caminho = pior caso do Bellman-Ford; "
+            "real = backend/data/rede.json"
+        ),
     )
     parser.add_argument(
         "--grau-medio",
