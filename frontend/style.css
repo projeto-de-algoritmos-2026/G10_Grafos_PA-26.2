@@ -299,6 +299,24 @@ h2 {
   cursor: pointer;
 }
 
+.comparison-button {
+  padding: 0.5rem 0.95rem;
+  border: 1px solid rgba(111, 185, 138, 0.45);
+  border-radius: 0.2rem;
+  color: var(--accent);
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 700;
+  background: var(--accent-soft);
+  cursor: pointer;
+}
+
+.comparison-button:hover,
+.comparison-button[aria-pressed="true"] {
+  color: #0a0d0b;
+  background: var(--accent);
+}
+
 .min-cut-button:hover:not(:disabled) {
   color: #0a0d0b;
   background: #dc626c;
@@ -388,6 +406,96 @@ h2 {
 
 #route-redundancy:empty {
   display: none;
+}
+
+.comparison-panel {
+  padding: 1rem 1.5rem 1.2rem;
+  border-bottom: 1px solid var(--surface-border);
+  background: rgba(8, 11, 9, 0.45);
+}
+
+.comparison-panel[hidden] {
+  display: none;
+}
+
+.comparison-panel-inconsistent {
+  box-shadow: inset 3px 0 0 var(--danger);
+  background: var(--danger-soft);
+}
+
+.comparison-heading {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.8rem;
+}
+
+.comparison-heading p {
+  margin-bottom: 0.2rem;
+}
+
+.comparison-note {
+  max-width: 34rem;
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.7rem;
+  line-height: 1.45;
+  text-align: right;
+}
+
+.comparison-warning {
+  margin: 0 0 0.8rem;
+  padding: 0.55rem 0.7rem;
+  border: 1px solid rgba(207, 122, 114, 0.4);
+  color: #e8c0bb;
+  background: var(--danger-soft);
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.comparison-table-wrap {
+  overflow-x: auto;
+}
+
+.comparison-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.78rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.comparison-table th,
+.comparison-table td {
+  padding: 0.55rem 0.65rem;
+  border: 1px solid var(--surface-border);
+  text-align: right;
+  white-space: nowrap;
+}
+
+.comparison-table th {
+  color: var(--muted);
+  font-size: 0.67rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  background: rgba(111, 185, 138, 0.04);
+}
+
+.comparison-table th:first-child,
+.comparison-table td:first-child {
+  text-align: left;
+}
+
+.comparison-table td:first-child {
+  color: #dceae2;
+  font-weight: 700;
+}
+
+.comparison-table td[data-metric="cost"] {
+  color: var(--accent);
+}
+
+.comparison-table .comparison-not-found {
+  color: var(--danger);
 }
 
 .network-hint {
@@ -677,6 +785,14 @@ h2 {
   .controls {
     flex-direction: column;
     align-items: stretch;
+  }
+
+  .comparison-heading {
+    flex-direction: column;
+  }
+
+  .comparison-note {
+    text-align: left;
   }
 
   .control-group select {

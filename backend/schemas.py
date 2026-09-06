@@ -11,6 +11,7 @@ from typing import Literal
 from pydantic import BaseModel, Field
 
 from backend.algorithms import RouteResult
+from backend.comparison import RouteComparison, TimedRouteResult
 from backend.resilience import CascadeResult
 
 type AlgoritmoNome = Literal["dijkstra", "bellman_ford", "a_star"]
@@ -48,6 +49,13 @@ class RotaRequest(BaseModel):
     origem: str
     destino: str
     algoritmo: AlgoritmoNome = "dijkstra"
+
+
+class ComparacaoRotaRequest(BaseModel):
+    """Pedido para executar todos os algoritmos sobre o mesmo par."""
+
+    origem: str
+    destino: str
 
 
 class ArestaRequest(BaseModel):
@@ -117,6 +125,44 @@ class RotaResult(BaseModel):
             algoritmo=algoritmo,
             nos_expandidos=resultado.nodes_expanded,
             arestas_relaxadas=resultado.edges_relaxed,
+        )
+
+
+class ComparacaoAlgoritmoResult(RotaResult):
+    """Rota e metricas observadas em uma unica execucao instrumentada."""
+
+    saltos: int = Field(ge=0)
+    tempo_ms: float = Field(ge=0, description="Tempo de uma unica execucao no servidor")
+
+    @classmethod
+    def from_domain(cls, resultado: TimedRouteResult) -> "ComparacaoAlgoritmoResult":
+        rota = RotaResult.from_domain(resultado.route, resultado.algorithm)
+        return cls(
+            **rota.model_dump(),
+            saltos=max(len(resultado.route.path) - 1, 0),
+            tempo_ms=resultado.elapsed_ms,
+        )
+
+
+class ComparacaoRotasResult(BaseModel):
+    """Comparacao dos algoritmos para um par no estado atual da simulacao."""
+
+    origem: str
+    destino: str
+    consistente: bool
+    resultados: list[ComparacaoAlgoritmoResult]
+
+    @classmethod
+    def from_domain(
+        cls, origem: str, destino: str, comparacao: RouteComparison
+    ) -> "ComparacaoRotasResult":
+        return cls(
+            origem=origem,
+            destino=destino,
+            consistente=comparacao.consistent,
+            resultados=[
+                ComparacaoAlgoritmoResult.from_domain(resultado) for resultado in comparacao.results
+            ],
         )
 
 

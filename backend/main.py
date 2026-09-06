@@ -19,6 +19,7 @@ from backend.algorithms import (
     k_shortest_paths,
     minimum_edge_cut,
 )
+from backend.comparison import compare_routes
 from backend.graph import Network
 from backend.resilience import simulate_cascade
 from backend.schemas import (
@@ -27,6 +28,8 @@ from backend.schemas import (
     ArestaState,
     CascataRequest,
     CascataResult,
+    ComparacaoRotaRequest,
+    ComparacaoRotasResult,
     CorteMinimoRequest,
     CorteMinimoResult,
     CriticidadeResult,
@@ -215,6 +218,16 @@ def calcular_rota(pedido: RotaRequest, request: Request, network: NetworkDep) ->
         ),
     )
     return resposta
+
+
+@app.post("/rota/comparar", response_model=ComparacaoRotasResult)
+def comparar_algoritmos(
+    pedido: ComparacaoRotaRequest, network: NetworkDep
+) -> ComparacaoRotasResult:
+    """Compara os tres algoritmos sem alterar a rota destacada da sessao."""
+    with _traduz_erros():
+        comparacao = compare_routes(network, pedido.origem, pedido.destino)
+    return ComparacaoRotasResult.from_domain(pedido.origem, pedido.destino, comparacao)
 
 
 @app.post("/rota/passos", response_model=RotaPassosResult)

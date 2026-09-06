@@ -40,6 +40,8 @@ def test_raiz_serve_a_interface_do_simulador(client: TestClient):
     assert response.headers["content-type"].startswith("text/html")
     assert "Simulador de Colapso de Internet" in response.text
     assert 'id="api-error"' in response.text
+    assert 'id="comparison-toggle"' in response.text
+    assert 'id="comparison-panel"' in response.text
 
 
 @pytest.mark.parametrize(
@@ -278,6 +280,47 @@ def test_rota_com_origem_igual_ao_destino_nao_e_erro(client: TestClient):
     assert response.status_code == 200
     assert response.json()["caminho"] == ["A"]
     assert response.json()["custo"] == 0.0
+
+
+def test_comparar_rotas_devolve_tres_algoritmos_sem_trocar_rota_atual(client: TestClient):
+    client.post("/rota", json={"origem": "A", "destino": "D", "algoritmo": "a_star"})
+
+    response = client.post("/rota/comparar", json={"origem": "A", "destino": "C"})
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["origem"] == "A"
+    assert body["destino"] == "C"
+    assert body["consistente"] is True
+    assert [result["algoritmo"] for result in body["resultados"]] == [
+        "dijkstra",
+        "bellman_ford",
+        "a_star",
+    ]
+    assert {result["custo"] for result in body["resultados"]} == {2.0}
+    assert all(result["saltos"] == 2 for result in body["resultados"])
+    assert all(result["tempo_ms"] >= 0 for result in body["resultados"])
+    current_route = client.get("/grafo").json()["rota_atual"]
+    assert (current_route["origem"], current_route["destino"], current_route["algoritmo"]) == (
+        "A",
+        "D",
+        "a_star",
+    )
+
+
+def test_comparar_rotas_particionadas_concorda_em_nao_encontrada(client: TestClient):
+    body = client.post("/rota/comparar", json={"origem": "A", "destino": "isolated"}).json()
+
+    assert body["consistente"] is True
+    assert all(result["encontrada"] is False for result in body["resultados"])
+    assert all(result["custo"] is None for result in body["resultados"])
+
+
+def test_comparar_rotas_com_no_inexistente_devolve_404(client: TestClient):
+    response = client.post("/rota/comparar", json={"origem": "A", "destino": "Z"})
+
+    assert response.status_code == 404
+    assert "Z" in response.json()["detail"]
 
 
 def test_resetar_simulacao_devolve_grafo_integro_e_limpa_rota(client: TestClient):
@@ -589,6 +632,7 @@ def test_openapi_documenta_todos_os_endpoints_tipados(client: TestClient):
         "/analise/cascata",
         "/analise/corte-minimo",
         "/rota",
+        "/rota/comparar",
         "/rota/passos",
         "/rotas",
         "/simulacao/resetar",
@@ -603,6 +647,9 @@ def test_openapi_documenta_todos_os_endpoints_tipados(client: TestClient):
         "RotaAtual",
         "RotaRequest",
         "RotaResult",
+        "ComparacaoRotaRequest",
+        "ComparacaoAlgoritmoResult",
+        "ComparacaoRotasResult",
         "RotasRequest",
         "RotasResult",
         "ArestaRequest",

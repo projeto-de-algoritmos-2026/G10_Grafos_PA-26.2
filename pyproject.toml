@@ -25,3 +25,4 @@ select = ["E", "F", "I", "UP"]
 
 [tool.pytest.ini_options]
 testpaths = ["backend/tests"]
+markers = ["exhaustive: varreduras completas mais lentas sobre a malha real"]

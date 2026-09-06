@@ -52,15 +52,30 @@ círculo em vez de um segmento reto. Quando pontos consecutivos passam de +180°
 -180° (ou no sentido contrário), a polilinha é dividida nas duas bordas do mapa. Isso
 faz conexões transpacíficas seguirem o caminho curto sem cruzar toda a tela.
 
-As conexões mostram o nome do cabo, a distância e o estado em um tooltip. A
-última rota calculada por `POST /rota` é retornada junto de `GET /grafo` e aparece
-destacada assim que a página carrega.
+As conexões mostram o nome do cabo, a distância, o estado e a ação disponível em um
+tooltip. A última rota calculada por `POST /rota` é retornada junto de `GET /grafo` e
+aparece destacada assim que a página carrega.
 
 ## Interação em tempo real
 
-Clicar em um nó ativo o derruba (`POST /nos/{id}/derrubar`); clicar de novo o
-restaura (`POST /nos/{id}/restaurar`). A cada mudança, se já houver uma rota
-selecionada, ela é recalculada automaticamente (`POST /rota`) e o novo caminho
-é destacado no grafo, sem recarregar a página. Se a mudança isolar origem e
-destino, a rede particionada aparece como mensagem de aviso no lugar do
-caminho.
+Clicar em um nó ativo o derruba (`POST /nos/{id}/derrubar`); clicar de novo o restaura
+(`POST /nos/{id}/restaurar`). Os cabos têm o mesmo comportamento por uma área de
+clique transparente e mais larga que o traço visível (`POST /arestas/derrubar` e
+`POST /arestas/restaurar`). Os marcadores são desenhados acima das linhas e recebem o
+clique primeiro quando há sobreposição.
+
+A cada mudança, se já houver uma rota selecionada, ela é recalculada automaticamente
+(`POST /rota`) e o novo caminho é destacado no grafo, sem recarregar a página. Se a
+mudança isolar origem e destino, a rede particionada aparece como mensagem de aviso no
+lugar do caminho. O reset restaura nós e cabos.
+
+## Comparação dos algoritmos
+
+O botão **Comparar algoritmos** consulta `POST /rota/comparar` e apresenta Dijkstra,
+Bellman-Ford e A* lado a lado. A tabela mostra custo, saltos, nós expandidos, arestas
+relaxadas e o tempo medido com `time.perf_counter()` apenas em torno de cada chamada.
+Esse tempo é de uma única execução no servidor e deve ser lido como demonstração, não
+como benchmark. Uma divergência de disponibilidade ou custo ganha um alerta visual.
+
+A comparação usa o mesmo estado de falhas da rota e é refeita após clique em nó ou
+cabo. O endpoint não substitui a rota atualmente destacada.
