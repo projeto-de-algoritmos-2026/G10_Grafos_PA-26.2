@@ -186,6 +186,8 @@ async function fetchCountries() {
 
 function toGlobePoints(graph) {
   const articulationPoints = articulationPointIds();
+  // Reduz pontos comuns conforme a malha cresce; extremos continuam grandes.
+  const regularRadius = Math.max(0.18, 0.35 * Math.sqrt(26 / graph.nos.length));
 
   return graph.nos.map((node) => {
     const route = graph.rota_atual;
@@ -200,7 +202,7 @@ function toGlobePoints(graph) {
       ativo: node.ativo,
       isArticulation,
       color: pointColorFor(node, route),
-      radius: isEndpoint ? 0.55 : 0.35,
+      radius: isEndpoint ? 0.55 : regularRadius,
     };
   });
 }
@@ -216,6 +218,7 @@ function toGlobeArcs(graph) {
   const routeEdges = currentRouteEdges(graph.rota_atual);
   const bridgeEdges = bridgeEdgeIds();
   const alternateEdges = alternateRouteEdgeInfo(currentAlternateRoutes);
+  const densityScale = Math.max(0.55, Math.sqrt(30 / graph.arestas.length));
 
   return graph.arestas
     .map((edge) => {
@@ -292,7 +295,7 @@ function toGlobeArcs(graph) {
               ? 0.16
               : isBridge
                 ? 0.38
-                : 0.25,
+                : 0.25 * densityScale,
         dashLength,
         dashGap,
         dashAnimateTime,

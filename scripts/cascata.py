@@ -54,7 +54,7 @@ def run_analysis(
 def write_csv(results: Sequence[CascadeResult], destination: Path) -> None:
     """Grava um ponto da curva por linha para permitir reanalise."""
     with destination.open("w", encoding="utf-8", newline="") as file:
-        writer = csv.DictWriter(file, fieldnames=CSV_FIELDS)
+        writer = csv.DictWriter(file, fieldnames=CSV_FIELDS, lineterminator="\n")
         writer.writeheader()
         for result in results:
             for point in result.points:
@@ -145,7 +145,7 @@ def collect_metadata(
         "semente": arguments.semente,
         "nos_iniciais": len(network.node_ids()),
         "arestas": len(network.edges()),
-        "dataset": str(DATA_FILE.relative_to(Path(__file__).resolve().parents[1])),
+        "dataset": DATA_FILE.relative_to(Path(__file__).resolve().parents[1]).as_posix(),
         "dataset_sha256": hashlib.sha256(DATA_FILE.read_bytes()).hexdigest(),
         "tempo_execucao_s": elapsed_seconds,
         "normalizacao": {

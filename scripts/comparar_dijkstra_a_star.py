@@ -57,7 +57,7 @@ def main() -> None:
 
     SAIDA.parent.mkdir(parents=True, exist_ok=True)
     with SAIDA.open("w", newline="", encoding="utf-8") as arquivo:
-        writer = csv.DictWriter(arquivo, fieldnames=list(linhas[0].keys()))
+        writer = csv.DictWriter(arquivo, fieldnames=list(linhas[0].keys()), lineterminator="\n")
         writer.writeheader()
         writer.writerows(linhas)
 

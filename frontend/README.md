@@ -5,15 +5,13 @@ JavaScript puro e consumindo a API FastAPI do `backend/`.
 
 ## Decisões técnicas
 
-### Visualização com vis-network
+### Visualização com Globe.gl
 
-Foi escolhida a biblioteca [`vis-network`](https://visjs.github.io/vis-network/)
-em vez de D3.js. Ela oferece layout físico de grafos pronto e uma API direta
-para eventos de clique e seleção. Isso reduz a quantidade de código necessária
-para renderizar a topologia e implementar as interações previstas nas issues
-`#10` e `#11`.
+Foi escolhida a biblioteca [`Globe.gl`](https://globe.gl/) para posicionar a malha
+pelas coordenadas WGS84 em um globo 3D e oferecer eventos de clique e seleção sem um
+pipeline de build.
 
-A versão `9.1.9` é carregada por CDN, sem npm ou bundler, mantendo a configuração
+A versão `2.27.1` é carregada por CDN, sem npm ou bundler, mantendo a configuração
 compatível com o escopo acadêmico do projeto.
 
 ### Arquivos estáticos pelo FastAPI
@@ -39,9 +37,10 @@ requisição falhar, uma mensagem de erro é apresentada na própria interface.
 
 ## Visualização da topologia
 
-Os nós são posicionados pelo `vis-network` com uma projeção equiretangular
-simples: longitude no eixo horizontal e latitude invertida no eixo vertical. A
-física da biblioteca fica desativada para preservar a posição geográfica.
+Os nós usam latitude e longitude diretamente no globo. Seus nomes aparecem sob
+ponteiro, evitando 100 rótulos simultâneos; o zoom e a rotação permitem inspecionar
+regiões densas. O raio dos pontos comuns e a espessura dos cabos diminuem conforme o
+dataset cresce, enquanto origem, destino, rotas e cortes mantêm destaque próprio.
 
 As conexões mostram o nome do cabo, a distância e o estado em um tooltip. A
 última rota calculada por `POST /rota` é retornada junto de `GET /grafo` e aparece

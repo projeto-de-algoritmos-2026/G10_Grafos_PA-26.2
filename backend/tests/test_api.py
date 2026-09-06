@@ -533,8 +533,8 @@ def test_openapi_documenta_todos_os_endpoints_tipados(client: TestClient):
 def test_dataset_real_carrega_metadados_e_permite_rota_global():
     network = load_network()
 
-    assert len(network.node_ids()) == 26
-    assert len(network.edges()) == 30
+    assert len(network.node_ids()) == 100
+    assert len(network.edges()) == 180
     assert network.get_node("chiba").name.endswith("Japão")
 
     response = TestClient(app)
@@ -559,4 +559,4 @@ def test_lifespan_carrega_dataset_antes_da_primeira_requisicao():
         response = startup_client.get("/grafo")
 
     assert response.status_code == 200
-    assert len(response.json()["nos"]) == 26
+    assert len(response.json()["nos"]) == 100

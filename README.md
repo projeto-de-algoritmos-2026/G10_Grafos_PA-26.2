@@ -9,7 +9,7 @@ acompanhar o resultado em uma interface web interativa.
 
 ## Funcionalidades
 
-- visualização de 26 pontos de conexão e 30 ligações associadas a sistemas reais de
+- visualização de 100 pontos de conexão e 180 ligações associadas a sistemas reais de
   cabos submarinos;
 - cálculo de menor caminho com Dijkstra, Bellman-Ford ou A* (heurística geodésica);
 - queda e restauração de nós por clique;
@@ -22,7 +22,7 @@ acompanhar o resultado em uma interface web interativa.
 - [Git](https://git-scm.com/);
 - Python 3.12 ou superior;
 - [uv](https://docs.astral.sh/uv/getting-started/installation/);
-- acesso à internet no navegador para carregar o `vis-network` 9.1.9 pela CDN.
+- acesso à internet no navegador para carregar o `Globe.gl` 2.27.1 pela CDN.
 
 Não é necessário instalar Node.js nem executar um servidor separado para o
 front-end.
@@ -75,8 +75,10 @@ backend/
 └── main.py           # API FastAPI e entrega dos arquivos estáticos
 frontend/             # interface em HTML, CSS e JavaScript
 scripts/
-├── validar_rede.py   # validação independente do dataset
-└── benchmark.py      # benchmark reproduzível dos algoritmos
+├── validar_rede.py              # validação independente do dataset
+├── benchmark.py                 # benchmark reproduzível dos algoritmos
+├── comparar_dijkstra_a_star.py  # comparação sobre todos os pares da malha real
+└── cascata.py                    # curvas de resiliência a falhas progressivas
 docs/
 ├── benchmark/        # CSV, gráfico, metadados e análise da issue #7
 ├── images/           # capturas reais da interface
@@ -103,7 +105,7 @@ uv run python scripts/validar_rede.py
 ## Benchmark
 
 O benchmark compara os algoritmos sobre grafos sintéticos aleatórios e em caminho,
-usando os mesmos grafos em cada comparação:
+usando os mesmos grafos em cada comparação, e inclui uma consulta na malha real:
 
 ```sh
 uv run python scripts/benchmark.py

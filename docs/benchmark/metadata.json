@@ -1,12 +1,13 @@
 {
-  "timestamp_utc": "2026-08-30 23:47:24 UTC",
-  "cpu": "12th Gen Intel(R) Core(TM) i7-1255U",
-  "nucleos": 12,
-  "so": "Linux 7.1.9-arch1-2",
-  "python": "3.12.13",
+  "timestamp_utc": "2026-09-06 15:31:45 UTC",
+  "cpu": "AMD64 Family 23 Model 24 Stepping 1, AuthenticAMD",
+  "nucleos": 8,
+  "so": "Windows 11",
+  "python": "3.12.10",
   "topologias": [
     "aleatoria",
-    "caminho"
+    "caminho",
+    "real"
   ],
   "tamanhos": [
     10,
@@ -18,5 +19,10 @@
   "grau_medio": 4.0,
   "amostras": 3,
   "repeticoes": 3,
-  "seed": 42
+  "seed": 42,
+  "topologia_real": {
+    "dataset": "backend/data/rede.json",
+    "origem": "praia-grande",
+    "destino": "chiba"
+  }
 }

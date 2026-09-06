@@ -76,15 +76,15 @@ caminho é um resultado válido (`encontrada = false`), e não um erro HTTP.
 
 ## 3. Dataset
 
-A malha contém **26 nós e 30 arestas**. Os nós representam landing points ou
+A malha contém **100 nós e 180 arestas**. Os nós representam landing points ou
 agregações metropolitanas de pontos próximos. As arestas indicam conectividade lógica
 associada a sistemas reais de cabos em serviço.
 
 As coordenadas WGS84 foram obtidas no GeoNames. Os sistemas e seus landing points
-foram consultados no mapa público da TeleGeography em 30 de agosto de 2026. Entre os
-sistemas usados estão Firmina, Monet, EllaLink, MAREA, 2Africa, INDIGO e Southern
-Cross NEXT. Cada aresta do arquivo `backend/data/rede.json` mantém a referência de sua
-fonte.
+foram consultados no mapa público da TeleGeography, com a ampliação conferida em 6 de
+setembro de 2026. A malha cobre também África Oriental, Sudeste Asiático, Oceania e o
+corredor ártico da Groenlândia. Cada aresta de `backend/data/rede.json` mantém a
+referência de sua fonte.
 
 O peso é calculado pela fórmula de Haversine entre as coordenadas exibidas. Portanto,
 ele não deve ser interpretado como latência, capacidade ou comprimento físico exato
@@ -174,27 +174,30 @@ O back-end separa a estrutura do grafo (`backend/graph.py`), os algoritmos
 de nós e cabos. O FastAPI também serve o front-end estático, portanto a demonstração
 precisa de um único processo.
 
-O front-end usa HTML, CSS e JavaScript sem framework. O `vis-network` posiciona os
-nós a partir de uma projeção equiretangular simples, destaca o caminho e trata cliques.
-Toda alteração relevante busca novamente o estado do grafo e solicita o recálculo.
+O front-end usa HTML, CSS e JavaScript sem framework. O `Globe.gl` posiciona os nós
+pelas coordenadas geográficas, destaca caminhos e trata cliques. Pontos e cabos comuns
+ficam menores conforme a densidade cresce, enquanto extremos e rotas selecionadas
+continuam destacados. Toda alteração relevante busca novamente o estado do grafo e
+solicita o recálculo.
 
 ## 6. Avaliação empírica
 
 ### 6.1 Método
 
-O benchmark da issue #7 foi executado em 30 de agosto de 2026, às 23:47 UTC, em um
-Intel Core i7-1255U com 12 núcleos, Linux 7.1.9 e CPython 3.12.13. Foram avaliados
+O benchmark foi executado em 6 de setembro de 2026, às 15:31 UTC, em um processador
+AMD64 de 8 núcleos, Windows 11 e CPython 3.12.10. Foram avaliados
 grafos com 10, 50, 100, 500 e 1.000 vértices, usando três grafos por tamanho e três
 repetições por grafo. O relógio `time.perf_counter()` envolveu somente a chamada do
 algoritmo.
 
-Foram usadas duas topologias com pesos uniformes entre 1 e 100:
+Foram usadas duas topologias sintéticas com pesos uniformes entre 1 e 100:
 
 - **aleatória:** grafo esparso conexo, com `E ≈ 2V`;
 - **caminho:** `E = V - 1`, com ordem de inserção adversa ao Bellman-Ford para expor
   seu pior caso.
+- **real:** os 100 nós e 180 arestas do dataset, na consulta Praia Grande → Chiba.
 
-Nas 30 combinações de topologia, tamanho e amostra, os dois algoritmos retornaram o
+Nas 31 combinações de topologia, tamanho e amostra, os dois algoritmos retornaram o
 mesmo custo. Os dados brutos estão em [benchmark/benchmark.csv](benchmark/benchmark.csv),
 e os metadados em [benchmark/metadata.json](benchmark/metadata.json).
 
@@ -204,22 +207,24 @@ Tempo médio por execução, em segundos:
 
 | Topologia | V | E | Dijkstra | Bellman-Ford | Razão BF/Dijkstra |
 |---|---:|---:|---:|---:|---:|
-| aleatória | 10 | 20 | 0,000057 | 0,000051 | 0,9× |
-| aleatória | 50 | 100 | 0,000215 | 0,000244 | 1,1× |
-| aleatória | 100 | 200 | 0,000509 | 0,000489 | 1,0× |
-| aleatória | 500 | 1.000 | 0,003062 | 0,003505 | 1,1× |
-| aleatória | 1.000 | 2.000 | 0,006036 | 0,008176 | 1,4× |
-| caminho | 10 | 9 | 0,000039 | 0,000045 | 1,1× |
-| caminho | 50 | 49 | 0,000152 | 0,000503 | 3,3× |
-| caminho | 100 | 99 | 0,000298 | 0,001834 | 6,1× |
-| caminho | 500 | 499 | 0,001877 | 0,051190 | 27,3× |
-| caminho | 1.000 | 999 | 0,003540 | 0,217266 | 61,4× |
+| aleatória | 10 | 20 | 0,000065 | 0,000064 | 1,0× |
+| aleatória | 50 | 100 | 0,000246 | 0,000328 | 1,3× |
+| aleatória | 100 | 200 | 0,000565 | 0,000709 | 1,3× |
+| aleatória | 500 | 1.000 | 0,003492 | 0,005105 | 1,5× |
+| aleatória | 1.000 | 2.000 | 0,005174 | 0,010657 | 2,1× |
+| caminho | 10 | 9 | 0,000040 | 0,000056 | 1,4× |
+| caminho | 50 | 49 | 0,000188 | 0,000818 | 4,4× |
+| caminho | 100 | 99 | 0,000367 | 0,003420 | 9,3× |
+| caminho | 500 | 499 | 0,002093 | 0,084236 | 40,3× |
+| caminho | 1.000 | 999 | 0,004724 | 0,349873 | 74,1× |
+| real | 100 | 180 | 0,000548 | 0,000679 | 1,2× |
 
 ![Tempo de execução por tamanho do grafo](benchmark/tempo_por_tamanho.png)
 
-No intervalo entre 100 e 1.000 vértices, a inclinação log-log medida foi 1,07 para
-Dijkstra nas duas topologias. Para Bellman-Ford, foi 1,22 na topologia aleatória e
-2,07 no caminho.
+No intervalo entre 100 e 1.000 vértices, a inclinação log-log medida foi 0,96 e 1,11
+para Dijkstra nas topologias aleatória e caminho. Para Bellman-Ford, foi 1,18 e 2,01,
+respectivamente. A saída antecipada e o par sorteado tornam a inclinação aleatória
+mais ruidosa; o caminho adverso expõe o crescimento quadrático esperado.
 
 O resultado de Dijkstra é compatível com `V log V` nos grafos esparsos. Bellman-Ford
 se aproxima de `V²` no caminho adverso, como prevê o pior caso. No grafo aleatório,
@@ -239,20 +244,20 @@ uv run python scripts/comparar_dijkstra_a_star.py
 ```
 
 Diferente do benchmark de tempo (seção 6.1), esta medição roda sobre a malha mundial
-real (`backend/data/rede.json`, 26 nós, 30 cabos) em vez de grafos sintéticos: é nela
+real (`backend/data/rede.json`, 100 nós, 180 cabos) em vez de grafos sintéticos: é nela
 que a heurística Haversine é informativa, porque os nós têm coordenadas geográficas de
-verdade. O script calcula Dijkstra e A* para os 650 pares ordenados (origem, destino)
-dos 26 nós, confirma que os dois concordam em custo em todos eles e conta quantos nós
+verdade. O script calcula Dijkstra e A* para os 9.900 pares ordenados (origem, destino)
+dos 100 nós, confirma que os dois concordam em custo em todos eles e conta quantos nós
 cada um expandiu. Dados brutos em
 [benchmark/nos_expandidos.csv](benchmark/nos_expandidos.csv).
 
 | | |
 |---|---|
-| Pares avaliados | 650 (todos os nós, ordenados) |
-| Custo divergente entre os algoritmos | 0 de 650 |
-| Média de nós expandidos — Dijkstra | 14,00 |
-| Média de nós expandidos — A* | 10,15 |
-| Redução média de A* sobre Dijkstra | 27,5% |
+| Pares avaliados | 9.900 (todos os nós, ordenados) |
+| Custo divergente entre os algoritmos | 0 de 9.900 |
+| Média de nós expandidos — Dijkstra | 51,00 |
+| Média de nós expandidos — A* | 27,34 |
+| Redução média de A* sobre Dijkstra | 46,4% |
 
 Nos pares transatlânticos citados como critério de aceite da issue #30 — que cruzam o
 Atlântico entre landing points nos Estados Unidos e na Península Ibérica — a redução é
@@ -262,29 +267,30 @@ maior que a média geral, porque a heurística geodésica descarta cedo os desvi
 | Origem | Destino | Nós expandidos (Dijkstra) | Nós expandidos (A*) |
 |---|---|---:|---:|
 | virginia-beach | sines | 7 | 4 |
-| los-angeles | carcavelos | 13 | 6 |
+| los-angeles | carcavelos | 69 | 25 |
 | virginia-beach | bilbao | 3 | 2 |
 
-Em nenhum dos 650 pares A* expandiu mais nós que Dijkstra; a diferença tende a zero
+Em nenhum dos 9.900 pares A* expandiu mais nós que Dijkstra; a diferença tende a zero
 quando origem e destino já estão poucos saltos um do outro (ex.: `virginia-beach` →
 `bilbao` é um cabo praticamente direto), e cresce nos pares mais distantes, onde
 Dijkstra desperdiça mais exploração em direções erradas antes de convergir.
 
 ### 6.4 Resiliência a falhas em cascata
 
-A malha real também foi submetida a 26 remoções progressivas usando três estratégias:
+A malha real também foi submetida a 100 remoções progressivas usando três estratégias:
 aleatória com semente 42, maior grau e pontos de articulação. Cada execução operou
 sobre uma cópia, sem modificar o estado da API. A maior componente foi normalizada
-pelos 26 nós iniciais e os pares alcançáveis pelos 325 pares iniciais.
+pelos 100 nós iniciais e os pares alcançáveis pelos 4.950 pares iniciais.
 
-Os ataques dirigidos reduziram a conectividade para menos de 50% dos pares após duas
-remoções (7,7% dos nós). A sequência aleatória medida cruzou o mesmo limiar após quatro
-remoções (15,4%). Depois de duas remoções, grau e articulação preservavam somente 24,9%
-dos pares; a sequência aleatória ainda preservava 55,7%.
+Os ataques dirigidos reduziram a conectividade para menos de 50% dos pares após três
+remoções por articulação (3% dos nós) e cinco por grau (5%). A sequência aleatória
+medida cruzou o mesmo limiar após 18 remoções. Depois de duas remoções, grau e
+articulação preservavam 52,7% e 50,1% dos pares; a sequência aleatória ainda
+preservava 96,0%.
 
 ![Falhas aleatórias e ataques dirigidos](benchmark/cascata/curva_resiliencia.png)
 
-Os valores vêm da execução de 6 de setembro de 2026, às 14:26 UTC, em Windows 11,
+Os valores vêm da execução de 6 de setembro de 2026, às 15:32 UTC, em Windows 11,
 CPython 3.12.10 e processador AMD64 de 8 núcleos. Dados brutos, hash do dataset,
 parâmetros e interpretação completa estão em
 [benchmark/cascata/analise.md](benchmark/cascata/analise.md). Uma única semente não
@@ -326,13 +332,13 @@ o estado em vez de removê-lo fisicamente. A rota nova aparece em amarelo.
   aberto.
 - **Peso aproximado:** distância Haversine não é latência nem comprimento real do
   cabo. Não há dados de capacidade, congestionamento ou disponibilidade histórica.
-- **Topologia curada:** os 26 nós são uma amostra didática; pontos metropolitanos
+- **Topologia curada:** os 100 nós são uma amostra didática; pontos metropolitanos
   próximos foram agregados e as linhas não reproduzem a geometria submarina.
 - **Simulação em memória:** não há persistência, usuários isolados nem controle de
   concorrência. Todos os clientes conectados ao mesmo processo compartilham o estado.
 - **Escopo de falhas na interface:** nós podem ser alternados por clique; operações de
   cabo existem na API, mas não há um controle visual equivalente na versão atual.
-- **Dependência de CDN:** a visualização requer acesso ao `vis-network` hospedado no
+- **Dependência de CDN:** a visualização requer acesso ao `Globe.gl` hospedado no
   unpkg. Não existe cópia local para uso totalmente offline.
 - **Algoritmos didáticos:** a aplicação calcula menor caminho centralmente e não
   implementa protocolos distribuídos da Internet, como OSPF ou BGP.

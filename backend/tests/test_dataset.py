@@ -26,9 +26,13 @@ def test_dataset_real_tem_tamanho_fontes_e_pesos_reproduziveis():
     nodes = {node.id: node for node in dataset.nos}
 
     assert MIN_NODES <= len(dataset.nos) <= MAX_NODES
-    assert len(dataset.nos) == 26
-    assert len(dataset.arestas) == 30
+    assert 95 <= len(dataset.nos) <= 105
+    assert 170 <= len(dataset.arestas) <= 190
     assert dataset.metadata.unidade_peso == "km"
+    assert {"dar-es-salaam", "singapore", "suva", "nuuk"} <= nodes.keys()
+    cable_sources = {source for edge in dataset.arestas for source in edge.fontes}
+    assert len(cable_sources) == 31
+    assert cable_sources <= dataset.metadata.fontes.keys()
 
     for edge in dataset.arestas:
         origin = nodes[edge.origem]
@@ -134,4 +138,17 @@ def test_quantidade_de_nos_fora_do_limite_e_rejeitada(tmp_path: Path, raw_datase
     raw_dataset["nos"] = raw_dataset["nos"][: MIN_NODES - 1]
 
     with pytest.raises(RuntimeError, match="at least 15"):
+        load_dataset(write_dataset(tmp_path, raw_dataset))
+
+
+def test_limite_maximo_e_sanidade_amplo():
+    assert MIN_NODES == 15
+    assert MAX_NODES == 2_000
+
+
+def test_quantidade_acima_do_novo_limite_maximo_e_rejeitada(tmp_path: Path, raw_dataset: dict):
+    template = raw_dataset["nos"][0]
+    raw_dataset["nos"] = [{**template, "id": f"no-{index}"} for index in range(MAX_NODES + 1)]
+
+    with pytest.raises(RuntimeError, match="at most 2000"):
         load_dataset(write_dataset(tmp_path, raw_dataset))
