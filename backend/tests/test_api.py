@@ -8,7 +8,7 @@ from fastapi.testclient import TestClient
 
 from backend.graph import Network
 from backend.main import app
-from backend.state import get_network, load_network
+from backend.state import SessionStore, get_network, load_network
 
 
 @pytest.fixture
@@ -272,6 +272,48 @@ def test_rota_com_origem_igual_ao_destino_nao_e_erro(client: TestClient):
     assert response.status_code == 200
     assert response.json()["caminho"] == ["A"]
     assert response.json()["custo"] == 0.0
+
+
+def test_clientes_tem_estado_de_falhas_isolado():
+    """Uma falha e uma rota de um cliente nao afetam outro cliente."""
+    app.state.network = load_network()
+    app.state.sessions = SessionStore()
+    cliente_a = TestClient(app)
+    cliente_b = TestClient(app)
+    try:
+        cliente_a.get("/grafo")
+        cliente_b.get("/grafo")
+
+        resposta = cliente_a.post("/nos/virginia-beach/derrubar")
+
+        assert resposta.status_code == 200
+        grafo_a = cliente_a.get("/grafo").json()
+        grafo_b = cliente_b.get("/grafo").json()
+        assert next(no for no in grafo_a["nos"] if no["id"] == "virginia-beach")["ativo"] is False
+        assert next(no for no in grafo_b["nos"] if no["id"] == "virginia-beach")["ativo"] is True
+
+        cliente_a.post("/rota", json={"origem": "sines", "destino": "bilbao"})
+        assert cliente_a.get("/grafo").json()["rota_atual"] is not None
+        assert cliente_b.get("/grafo").json()["rota_atual"] is None
+    finally:
+        cliente_a.close()
+        cliente_b.close()
+
+
+def test_sessao_expirada_recomeca_com_malha_integra():
+    """Uma sessao inativa e removida e o cookie antigo inicia uma sessao limpa."""
+    app.state.network = load_network()
+    app.state.sessions = SessionStore()
+    with TestClient(app) as client:
+        client.get("/grafo")
+        client.post("/nos/virginia-beach/derrubar")
+        app.state.sessions.ttl_seconds = 0
+
+        grafo = client.get("/grafo").json()
+
+        assert next(no for no in grafo["nos"] if no["id"] == "virginia-beach")["ativo"] is True
+        assert grafo["rota_atual"] is None
+        app.state.sessions.ttl_seconds = 30 * 60
 
 
 def test_rota_inexistente_devolve_custo_nulo_e_nao_erro(client: TestClient):
