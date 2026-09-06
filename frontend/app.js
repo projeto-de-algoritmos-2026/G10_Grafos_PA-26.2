@@ -350,7 +350,9 @@ function renderRouteSummary(graph) {
   const cost = Math.round(route.custo).toLocaleString("pt-BR");
   elements.routeDetails.textContent = `${algorithm} · ${cost} km · ${hops} ${
     hops === 1 ? "salto" : "saltos"
-  } · ${route.nos_expandidos} nós explorados`;
+  } · ${route.nos_expandidos} nós expandidos · ${
+    route.arestas_relaxadas
+  } arestas relaxadas`;
   elements.routeRedundancy.textContent = redundancyText();
 }
 
