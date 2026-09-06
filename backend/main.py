@@ -131,6 +131,8 @@ def analisar_cascata(pedido: CascataRequest, network: NetworkDep) -> CascataResu
             seed=pedido.semente,
         )
     return CascataResult.from_domain(result)
+
+
 @app.post("/analise/corte-minimo")
 def calcular_corte_minimo(pedido: CorteMinimoRequest, network: NetworkDep) -> CorteMinimoResult:
     """Calcula quantos cabos ativos separam dois roteadores pelo teorema de Menger."""

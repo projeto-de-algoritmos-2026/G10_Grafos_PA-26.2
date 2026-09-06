@@ -42,18 +42,14 @@ def test_simulation_does_not_change_nodes_or_edges_in_original_network():
     graph.set_node_down("leaf-3")
     graph.set_edge_down("center", "leaf-2")
     node_states = [(node.id, node.is_up) for node in graph.nodes()]
-    edge_states = [
-        (origin, edge.destination, edge.is_up) for origin, edge in graph.edges()
-    ]
+    edge_states = [(origin, edge.destination, edge.is_up) for origin, edge in graph.edges()]
 
     result = simulate_cascade(graph, "articulacao", 4, seed=7)
 
     assert result.initial_nodes == 4
     assert "leaf-3" not in {point.removed_node for point in result.points}
     assert [(node.id, node.is_up) for node in graph.nodes()] == node_states
-    assert [
-        (origin, edge.destination, edge.is_up) for origin, edge in graph.edges()
-    ] == edge_states
+    assert [(origin, edge.destination, edge.is_up) for origin, edge in graph.edges()] == edge_states
 
 
 def test_complete_graph_stays_connected_until_the_last_removal():

@@ -154,6 +154,8 @@ def test_cascata_nao_altera_estado_global_da_api(client: TestClient):
 )
 def test_cascata_rejeita_parametros_invalidos(client: TestClient, pedido: dict[str, object]):
     assert client.post("/analise/cascata", json=pedido).status_code == 422
+
+
 def test_corte_minimo_devolve_dois_cabos_para_dois_caminhos_disjuntos(
     client: TestClient,
 ):

@@ -48,10 +48,7 @@ def run_analysis(
     """Executa todas as estrategias pedidas sobre a topologia real."""
     network = load_network()
     requested_steps = len(network.node_ids()) if steps is None else steps
-    return [
-        simulate_cascade(network, strategy, requested_steps, seed)
-        for strategy in strategies
-    ]
+    return [simulate_cascade(network, strategy, requested_steps, seed) for strategy in strategies]
 
 
 def write_csv(results: Sequence[CascadeResult], destination: Path) -> None:
@@ -73,9 +70,7 @@ def write_csv(results: Sequence[CascadeResult], destination: Path) -> None:
                         "maior_componente_fracao": point.largest_component_fraction,
                         "pares_alcancaveis_fracao": point.reachable_pairs_fraction,
                         "custo_medio_rotas": (
-                            point.average_route_cost
-                            if point.average_route_cost is not None
-                            else ""
+                            point.average_route_cost if point.average_route_cost is not None else ""
                         ),
                     }
                 )
@@ -215,9 +210,7 @@ def main(argv: Sequence[str] | None = None) -> None:
     print(f"grafico -> {chart_path}")
     print(f"metadados -> {metadata_path}")
     for result in results:
-        order = ", ".join(
-            point.removed_node or "inicio" for point in result.points[:6]
-        )
+        order = ", ".join(point.removed_node or "inicio" for point in result.points[:6])
         print(f"{result.strategy}: {order} ...")
 
 
