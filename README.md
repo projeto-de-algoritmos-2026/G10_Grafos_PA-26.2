@@ -114,11 +114,24 @@ O comando sobrescreve `docs/benchmark/benchmark.csv`,
 execução. Os tempos variam conforme a máquina. A metodologia, os dados já medidos e a
 interpretação estão em [docs/benchmark/analise.md](docs/benchmark/analise.md).
 
+## Análise de resiliência
+
+Para comparar falhas aleatórias com ataques dirigidos por grau e articulação:
+
+```sh
+uv run python scripts/cascata.py
+```
+
+O comando gera CSV, gráfico e metadados reproduzíveis em `docs/benchmark/cascata/`.
+A análise da execução versionada está em
+[docs/benchmark/cascata/analise.md](docs/benchmark/cascata/analise.md).
+
 ## Documentação
 
 - [Relatório final](docs/relatorio.md)
 - [Dataset da rede mundial](docs/rede-mundial.md)
 - [Análise do benchmark](docs/benchmark/analise.md)
+- [Análise de resiliência](docs/benchmark/cascata/analise.md)
 
 O relatório foi mantido em Markdown porque não há, no repositório, enunciado ou
 cronograma que determine outro padrão. Se a disciplina exigir PDF ou formatação ABNT,

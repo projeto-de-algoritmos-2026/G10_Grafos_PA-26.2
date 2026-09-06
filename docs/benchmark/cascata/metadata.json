@@ -1,0 +1,25 @@
+{
+  "timestamp_utc": "2026-09-06 14:26:29 UTC",
+  "cpu": "AMD64 Family 23 Model 24 Stepping 1, AuthenticAMD",
+  "nucleos": 8,
+  "so": "Windows 11",
+  "python": "3.12.10",
+  "estrategias": [
+    "aleatoria",
+    "grau",
+    "articulacao"
+  ],
+  "passos_solicitados": null,
+  "passos_executados": 26,
+  "semente": 42,
+  "nos_iniciais": 26,
+  "arestas": 30,
+  "dataset": "backend\\data\\rede.json",
+  "dataset_sha256": "6d35da285ec32a7e505120a3a59809617558eff902c0e7ec9484da285e5a7872",
+  "tempo_execucao_s": 0.025081600062549114,
+  "normalizacao": {
+    "maior_componente": "tamanho da maior componente / nos ativos no inicio",
+    "pares_alcancaveis": "pares alcancaveis / pares entre nos ativos no inicio",
+    "custo_medio": "media dos menores custos apenas entre pares alcancaveis"
+  }
+}

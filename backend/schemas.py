@@ -11,8 +11,10 @@ from typing import Literal
 from pydantic import BaseModel, Field
 
 from backend.algorithms import RouteResult
+from backend.resilience import CascadeResult
 
 type AlgoritmoNome = Literal["dijkstra", "bellman_ford"]
+type EstrategiaCascata = Literal["aleatoria", "grau", "articulacao"]
 
 
 class NoState(BaseModel):
@@ -169,3 +171,53 @@ class CriticidadeResult(BaseModel):
     articulacoes: list[str]
     pontes: list[PonteState]
     componentes: int
+
+
+class CascataRequest(BaseModel):
+    """Parametros de uma simulacao progressiva sobre uma copia da rede."""
+
+    estrategia: EstrategiaCascata
+    passos: int = Field(ge=0, le=10_000)
+    semente: int = 42
+
+
+class CascataPonto(BaseModel):
+    """Metricas observadas apos determinada quantidade de remocoes."""
+
+    passo: int = Field(ge=0)
+    no_removido: str | None
+    nos_ativos: int = Field(ge=0)
+    fracao_removida: float = Field(ge=0, le=1)
+    maior_componente_fracao: float = Field(ge=0, le=1)
+    pares_alcancaveis_fracao: float = Field(ge=0, le=1)
+    custo_medio_rotas: float | None = Field(ge=0)
+
+
+class CascataResult(BaseModel):
+    """Curva de degradacao produzida por uma estrategia de remocao."""
+
+    estrategia: EstrategiaCascata
+    semente: int
+    total_inicial: int = Field(ge=0)
+    pontos: list[CascataPonto]
+
+    @classmethod
+    def from_domain(cls, result: CascadeResult) -> "CascataResult":
+        """Traduz os nomes internos para o contrato publico em portugues."""
+        return cls(
+            estrategia=result.strategy,
+            semente=result.seed,
+            total_inicial=result.initial_nodes,
+            pontos=[
+                CascataPonto(
+                    passo=point.step,
+                    no_removido=point.removed_node,
+                    nos_ativos=point.active_nodes,
+                    fracao_removida=point.removed_fraction,
+                    maior_componente_fracao=point.largest_component_fraction,
+                    pares_alcancaveis_fracao=point.reachable_pairs_fraction,
+                    custo_medio_rotas=point.average_route_cost,
+                )
+                for point in result.points
+            ],
+        )
