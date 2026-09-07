@@ -7,6 +7,12 @@ acompanhar o resultado em uma interface web interativa.
 
 ![Comparação dos algoritmos e recálculo de rota após a queda de um cabo](docs/images/mapa-rota.png)
 
+## Vídeo de apresentação
+
+- [Assistir no YouTube](https://youtu.be/oVF8ElNQ7pA)
+- [Assistir diretamente pelo repositório](PA-1-GRAFOS.mp4)
+- [Baixar o vídeo em MP4](https://github.com/projeto-de-algoritmos-2026/G10_Grafos_PA-26.2/raw/refs/heads/main/PA-1-GRAFOS.mp4)
+
 ## Funcionalidades
 
 - visualização de 100 pontos de conexão e 180 ligações associadas a sistemas reais de
