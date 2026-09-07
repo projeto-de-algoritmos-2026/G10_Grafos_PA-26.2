@@ -43,6 +43,12 @@ uv sync
 O `uv sync` cria o ambiente virtual e instala as dependências da aplicação e de
 desenvolvimento conforme o `uv.lock`.
 
+As receitas canônicas do projeto ficam no `justfile`. Consulte todas com:
+
+```sh
+just --list
+```
+
 ## Executando a demo
 
 Na raiz do repositório, inicie o único processo necessário:
@@ -108,7 +114,14 @@ docs/
 
 ## Testes e qualidade
 
-Execute, a partir da raiz:
+Execute, a partir da raiz, o mesmo conjunto de verificações usado no CI:
+
+```sh
+just check
+```
+
+As receitas individuais são `just test`, `just lint` e `just fmt`. Os comandos crus
+equivalentes continuam disponíveis abaixo para ambientes sem `just`.
 
 ```sh
 uv run pytest
@@ -119,7 +132,7 @@ uv run ruff format --check .
 Para conferir separadamente a integridade da topologia:
 
 ```sh
-uv run python scripts/validar_rede.py
+just validar
 ```
 
 ## Benchmark
@@ -128,7 +141,7 @@ O benchmark compara os algoritmos sobre grafos sintéticos aleatórios e em cami
 usando os mesmos grafos em cada comparação, e inclui uma consulta na malha real:
 
 ```sh
-uv run python scripts/benchmark.py
+just bench
 ```
 
 O comando sobrescreve `docs/benchmark/benchmark.csv`,
