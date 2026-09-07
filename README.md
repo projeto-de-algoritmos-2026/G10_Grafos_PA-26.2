@@ -121,7 +121,10 @@ just check
 ```
 
 As receitas individuais são `just test`, `just lint` e `just fmt`. Os comandos crus
-equivalentes continuam disponíveis abaixo para ambientes sem `just`.
+equivalentes continuam disponíveis abaixo para ambientes sem `just`. O `just test`
+inclui testes baseados em propriedades com Hypothesis, que geram redes aleatórias e
+verificam a equivalência de Dijkstra e Bellman-Ford, a validade dos caminhos e a
+monotonicidade após falhas.
 
 ```sh
 uv run pytest
