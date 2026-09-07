@@ -19,11 +19,8 @@ jobs:
       - name: Install dependencies
         run: uv sync --locked --dev
 
-      - name: Lint (ruff check)
-        run: uv run ruff check .
+      - name: Install just
+        uses: taiki-e/install-action@just
 
-      - name: Format check (ruff format)
-        run: uv run ruff format --check .
-
-      - name: Testes (pytest)
-        run: uv run pytest
+      - name: Verificações
+        run: just check
