@@ -9,16 +9,6 @@ acompanhar o resultado em uma interface web interativa.
 
 ## Vídeo de apresentação
 
-<iframe
-  width="560"
-  height="315"
-  src="https://www.youtube.com/embed/oVF8ElNQ7pA"
-  title="Apresentação do Simulador de Colapso de Internet"
-  frameborder="0"
-  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-  allowfullscreen>
-</iframe>
-
 - [Assistir no YouTube](https://youtu.be/oVF8ElNQ7pA)
 - [Baixar o vídeo em MP4](https://github.com/projeto-de-algoritmos-2026/G10_Grafos_PA-26.2/raw/refs/heads/main/PA-1-GRAFOS.mp4)
 
