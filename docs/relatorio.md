@@ -15,7 +15,7 @@
 O projeto implementa um simulador visual de falhas em uma rede mundial. Pontos de
 conexão são modelados como vértices, cabos como arestas e a distância geodésica entre
 os pontos como peso. O usuário escolhe origem, destino e algoritmo de menor caminho;
-quando um nó cai, a topologia disponível muda e a rota é calculada novamente. Foram
+quando um nó ou cabo cai, a topologia disponível muda e a rota é calculada novamente. Foram
 implementados Dijkstra, Bellman-Ford e A* sem bibliotecas de algoritmos de grafos. Os
 testes empíricos mostram o comportamento quase linear-logarítmico de Dijkstra nos
 grafos esparsos avaliados, o pior caso quadrático de Bellman-Ford em uma topologia em
@@ -170,9 +170,10 @@ a `O(V log V)`, enquanto o pior caso de Bellman-Ford tende a `O(V²)`.
 
 O back-end separa a estrutura do grafo (`backend/graph.py`), os algoritmos
 (`backend/algorithms/`), as operações de simulação (`backend/simulation.py`) e a API
-(`backend/main.py`). A API expõe a topologia, o cálculo de rota e a queda/restauração
-de nós e cabos. O FastAPI também serve o front-end estático, portanto a demonstração
-precisa de um único processo.
+(`backend/main.py`). A API expõe a topologia, o cálculo de rota, a comparação
+instrumentada dos três algoritmos e a queda/restauração de nós e cabos. O FastAPI
+também serve o front-end estático, portanto a demonstração precisa de um único
+processo.
 
 O front-end usa HTML, CSS e JavaScript sem framework. Foi escolhida a alternativa
 **Leaflet + camada de tiles** discutida na issue do mapa. Em comparação com manter o
@@ -190,8 +191,18 @@ falham, o mapa-base dá lugar a uma grade neutra, mas nós, cabos, zoom, cliques
 destaques continuam funcionando.
 
 Pontos e cabos comuns ficam menores conforme a densidade cresce, enquanto extremos e
-rotas selecionadas continuam destacados. Toda alteração relevante busca novamente o
-estado do grafo e solicita o recálculo.
+rotas selecionadas continuam destacados. Uma área transparente amplia o alvo de
+clique dos cabos sem alterar sua aparência; como os marcadores ficam acima dessa
+camada, o clique no nó tem precedência em sobreposições. Toda alteração relevante
+busca novamente o estado do grafo, solicita o recálculo e, quando o painel está ativo,
+atualiza a comparação.
+
+`POST /rota/comparar` executa Dijkstra, Bellman-Ford e A* no mesmo snapshot da sessão
+e devolve custo, saltos, nós expandidos, arestas relaxadas e tempo. O relógio
+`time.perf_counter()` envolve somente cada chamada do algoritmo. Por ser uma única
+execução sujeita a ruído, a interface explicita que o tempo não substitui o benchmark
+reproduzível da seção 6. O endpoint também informa se os três resultados concordam;
+uma divergência gera um alerta visual e não altera a rota selecionada.
 
 ## 6. Avaliação empírica
 
@@ -288,6 +299,12 @@ quando origem e destino já estão poucos saltos um do outro (ex.: `virginia-bea
 `bilbao` é um cabo praticamente direto), e cresce nos pares mais distantes, onde
 Dijkstra desperdiça mais exploração em direções erradas antes de convergir.
 
+A validação do modo comparativo amplia essa varredura para os três algoritmos: um
+teste exaustivo executa Dijkstra, Bellman-Ford e A* nos mesmos 9.900 pares e encontrou
+zero divergências de disponibilidade ou custo. Casos dedicados cobrem também uma rede
+particionada e uma topologia em que Bellman-Ford relaxa mais arestas que Dijkstra. O
+teste lento pode ser executado isoladamente com `uv run pytest -m exhaustive`.
+
 ### 6.4 Resiliência a falhas em cascata
 
 A malha real também foi submetida a 100 remoções progressivas usando três estratégias:
@@ -313,17 +330,19 @@ topologia do projeto, o mecanismo de fragilidade a ataques dirigidos.
 ## 7. Resultados da interface
 
 A captura abaixo foi produzida em 6 de setembro de 2026 com a aplicação local em
-execução. O cenário selecionou Dijkstra, origem **Praia Grande / Santos** e destino
-**Sines / Sesimbra**. A API retornou custo de **7.959 km**, em dois saltos; a rota
-ótima aparece em amarelo sobre o Atlântico, enquanto os caminhos alternativos ficam
-mais finos. Os pontos aparecem sobre continentes reconhecíveis e os cabos do Pacífico
-são interrompidos nas bordas do mapa, demonstrando o tratamento do antimeridiano.
+execução. O cenário selecionou Dijkstra, origem **Las Toninas** e destino
+**Virginia Beach**, ativou a comparação e derrubou por clique o cabo direto entre
+Fortaleza e Virginia Beach. A rota, antes com **10.059 km**, foi recalculada para
+**35.416 km** em dez saltos. Os três algoritmos concordaram no custo, enquanto a
+tabela tornou visível a diferença de trabalho: nesta execução, Bellman-Ford relaxou
+1.710 arestas, contra 291 de Dijkstra e 173 de A*.
 
-![Mapa mundial com a rota entre Praia Grande e Sines](images/mapa-rota.png)
+![Comparação dos algoritmos e rota recalculada após a queda de um cabo](images/mapa-rota.png)
 
 O mesmo mapa preserva os estados de nó ativo, derrubado, origem, destino, pontos de
-articulação, pontes, corte mínimo e rota. Clicar em um marcador continua alternando a
-disponibilidade e provocando o recálculo sem recarregar a página.
+articulação, pontes, corte mínimo e rota. Clicar em marcador ou cabo alterna sua
+disponibilidade e provoca o recálculo sem recarregar a página. Os cabos do Pacífico
+são interrompidos nas bordas do mapa, demonstrando o tratamento do antimeridiano.
 
 ## 8. Limitações e decisões em aberto
 
@@ -336,8 +355,9 @@ disponibilidade e provocando o recálculo sem recarregar a página.
   próximos foram agregados e as linhas não reproduzem a geometria submarina.
 - **Simulação em memória:** não há persistência, usuários isolados nem controle de
   concorrência. Todos os clientes conectados ao mesmo processo compartilham o estado.
-- **Escopo de falhas na interface:** nós podem ser alternados por clique; operações de
-  cabo existem na API, mas não há um controle visual equivalente na versão atual.
+- **Medição instantânea:** o tempo da tabela vem de uma única execução por algoritmo
+  e varia com carga, aquecimento e resolução do relógio; comparações de desempenho
+  devem usar o benchmark reproduzível.
 - **Mapa-base externo:** os tiles cartográficos vêm do OpenStreetMap e exigem acesso à
   internet. O Leaflet está versionado localmente e a aplicação degrada para um fundo
   neutro sem perder topologia ou interação.
@@ -356,10 +376,10 @@ didático: produz os mesmos custos na malha válida, aceita pesos negativos e ev
 um pior caso muito mais caro quando a topologia força `V - 1` rodadas.
 
 A captura confirma que a topologia está ancorada em um mapa reconhecível, com arcos
-geodésicos e tratamento do antimeridiano. Uma falha preserva o nó para visualização,
-altera o conjunto de caminhos utilizáveis e provoca um recálculo visível da rota. O
-dataset, os testes e os artefatos do benchmark permitem reproduzir tanto a
-demonstração quanto a análise apresentada.
+geodésicos e tratamento do antimeridiano. Uma falha preserva o elemento para
+visualização, altera o conjunto de caminhos utilizáveis e provoca um recálculo visível
+da rota e da tabela comparativa. O dataset, os testes e os artefatos do benchmark
+permitem reproduzir tanto a demonstração quanto a análise apresentada.
 
 ## Referências do projeto
 

@@ -84,6 +84,14 @@
           <button type="button" id="min-cut-button" class="min-cut-button" disabled>
             Calcular corte mínimo
           </button>
+          <button
+            type="button"
+            id="comparison-toggle"
+            class="comparison-button"
+            aria-pressed="false"
+          >
+            Comparar algoritmos
+          </button>
           <button type="button" id="reset-button" class="reset-button">
             &gt; reset --force
           </button>
@@ -120,6 +128,42 @@
         </section>
 
         <section
+          id="comparison-panel"
+          class="comparison-panel"
+          aria-labelledby="comparison-title"
+          aria-live="polite"
+          hidden
+        >
+          <div class="comparison-heading">
+            <div>
+              <p id="comparison-title" class="route-label">Comparação dos algoritmos</p>
+              <p id="comparison-status" class="route-details">
+                Selecione origem e destino para comparar.
+              </p>
+            </div>
+            <p class="comparison-note">
+              Tempo de uma única execução no servidor; é uma medida ruidosa, não um benchmark.
+            </p>
+          </div>
+          <p id="comparison-warning" class="comparison-warning" role="alert" hidden></p>
+          <div class="comparison-table-wrap">
+            <table class="comparison-table">
+              <thead>
+                <tr>
+                  <th scope="col">Algoritmo</th>
+                  <th scope="col">Custo</th>
+                  <th scope="col">Saltos</th>
+                  <th scope="col">Nós expandidos</th>
+                  <th scope="col">Arestas relaxadas</th>
+                  <th scope="col">Tempo</th>
+                </tr>
+              </thead>
+              <tbody id="comparison-body"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section
           class="criticality-summary"
           aria-labelledby="criticality-title"
           aria-live="polite"
@@ -136,8 +180,8 @@
         </section>
 
         <p class="network-hint">
-          Clique em um nó para derrubá-lo ou restaurá-lo · arraste para mover o mapa · role para
-          dar zoom.
+          Clique em um nó ou cabo para derrubá-lo ou restaurá-lo · arraste para mover o mapa ·
+          role para dar zoom.
         </p>
 
         <div

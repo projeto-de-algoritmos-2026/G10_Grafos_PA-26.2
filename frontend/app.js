@@ -17,6 +17,11 @@ const elements = {
   algoBellmanFord: document.querySelector("#algo-bellman-ford"),
   algoAStar: document.querySelector("#algo-a-star"),
   minCutButton: document.querySelector("#min-cut-button"),
+  comparisonToggle: document.querySelector("#comparison-toggle"),
+  comparisonPanel: document.querySelector("#comparison-panel"),
+  comparisonStatus: document.querySelector("#comparison-status"),
+  comparisonWarning: document.querySelector("#comparison-warning"),
+  comparisonBody: document.querySelector("#comparison-body"),
   resetButton: document.querySelector("#reset-button"),
   tracePlayButton: document.querySelector("#trace-play-button"),
   traceStepButton: document.querySelector("#trace-step-button"),
@@ -70,6 +75,10 @@ let currentTrace = [];
 let currentTraceIndex = 0;
 let traceTimer;
 let traceEvent;
+let comparisonEnabled = false;
+let currentComparison;
+let comparisonRequestId = 0;
+const pendingTopologyChanges = new Set();
 
 const currentSelection = {
   origem: null,
@@ -224,6 +233,8 @@ function toMapCables(graph) {
 
       return {
         id,
+        origem: edge.origem,
+        destino: edge.destino,
         cabo: edge.cabo,
         peso: edge.peso,
         ativo: edge.ativo,
@@ -265,11 +276,14 @@ function cableLabel(cable) {
         "pt-BR",
       )} km`
     : "";
+  const action = cable.ativo
+    ? "Clique para derrubar este cabo"
+    : "Clique para restaurar este cabo";
   return `${cable.cabo}<br>${Math.round(cable.peso).toLocaleString("pt-BR")} km<br>${
     cable.ativo ? "Ativa" : "Derrubada"
   }${cable.isBridge ? "<br>Ponte (ponto único de falha)" : ""}${
     cable.isMinCut ? "<br>Parte do corte mínimo calculado" : ""
-  }${alternateInfo}`;
+  }${alternateInfo}<br><strong>${action}</strong>`;
 }
 
 function renderRouteSummary(graph) {
@@ -313,6 +327,107 @@ function redundancyText() {
   }
   const percent = currentRedundancyPercent.toLocaleString("pt-BR", { maximumFractionDigits: 1 });
   return `Redundância do par: a 2ª melhor rota (algoritmo de Yen) custa ${percent}% a mais que a ótima.`;
+}
+
+function renderComparison() {
+  elements.comparisonPanel.hidden = !comparisonEnabled;
+  elements.comparisonToggle.setAttribute("aria-pressed", String(comparisonEnabled));
+  if (!comparisonEnabled) {
+    return;
+  }
+
+  elements.comparisonWarning.hidden = true;
+  elements.comparisonWarning.textContent = "";
+  elements.comparisonPanel.classList.remove("comparison-panel-inconsistent");
+
+  if (!currentSelection.origem || !currentSelection.destino) {
+    elements.comparisonStatus.textContent = "Selecione origem e destino para comparar.";
+    elements.comparisonBody.innerHTML = "";
+    return;
+  }
+  if (!currentComparison) {
+    elements.comparisonStatus.textContent = "Comparando no servidor…";
+    elements.comparisonBody.innerHTML = "";
+    return;
+  }
+
+  const foundResult = currentComparison.resultados.find((result) => result.encontrada);
+  if (currentComparison.consistente) {
+    elements.comparisonStatus.textContent = foundResult
+      ? `Os três algoritmos concordam no custo de ${Math.round(foundResult.custo).toLocaleString("pt-BR")} km.`
+      : "Os três algoritmos concordam que não existe rota disponível.";
+  } else {
+    elements.comparisonStatus.textContent = "Os resultados não são consistentes.";
+    elements.comparisonWarning.textContent =
+      "Divergência detectada entre os algoritmos. O resultado precisa ser investigado.";
+    elements.comparisonWarning.hidden = false;
+    elements.comparisonPanel.classList.add("comparison-panel-inconsistent");
+  }
+
+  elements.comparisonBody.innerHTML = currentComparison.resultados
+    .map((result) => {
+      const cost = result.encontrada
+        ? `${Math.round(result.custo).toLocaleString("pt-BR")} km`
+        : "Sem rota";
+      const statusClass = result.encontrada ? "" : ' class="comparison-not-found"';
+      const elapsed = result.tempo_ms.toLocaleString("pt-BR", {
+        minimumFractionDigits: 3,
+        maximumFractionDigits: 3,
+      });
+      return `<tr>
+        <td>${ALGORITHM_LABELS[result.algoritmo] ?? result.algoritmo}</td>
+        <td data-metric="cost"${statusClass}>${cost}</td>
+        <td>${result.saltos}</td>
+        <td>${result.nos_expandidos.toLocaleString("pt-BR")}</td>
+        <td>${result.arestas_relaxadas.toLocaleString("pt-BR")}</td>
+        <td>${elapsed} ms</td>
+      </tr>`;
+    })
+    .join("");
+}
+
+async function refreshComparison() {
+  const requestId = ++comparisonRequestId;
+  if (!comparisonEnabled || !currentSelection.origem || !currentSelection.destino) {
+    currentComparison = undefined;
+    renderComparison();
+    return;
+  }
+
+  currentComparison = undefined;
+  renderComparison();
+  const response = await fetch("/rota/comparar", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      origem: currentSelection.origem,
+      destino: currentSelection.destino,
+    }),
+  });
+  if (!response.ok) {
+    throw new Error(`A API respondeu com HTTP ${response.status}.`);
+  }
+  const comparison = await response.json();
+  if (requestId !== comparisonRequestId || !comparisonEnabled) {
+    return;
+  }
+  currentComparison = comparison;
+  renderComparison();
+}
+
+async function toggleComparison() {
+  comparisonEnabled = !comparisonEnabled;
+  comparisonRequestId += 1;
+  currentComparison = undefined;
+  renderComparison();
+  if (comparisonEnabled) {
+    try {
+      clearActionError();
+      await refreshComparison();
+    } catch (error) {
+      showActionError(error);
+    }
+  }
 }
 
 function resizeMap() {
@@ -399,18 +514,26 @@ function updateMap(graph) {
     .sort((first, second) => first.priority - second.priority)
     .forEach((cable) => {
       cable.segments.forEach((segment) => {
-        window.L.polyline(
-          segment.map((point) => [point.lat, point.lng]),
-          {
-            color: cable.color,
-            dashArray: cable.dashArray,
-            interactive: true,
-            opacity: cable.opacity,
-            smoothFactor: 0.5,
-            weight: cable.weight,
-          },
-        )
+        const coordinates = segment.map((point) => [point.lat, point.lng]);
+        window.L.polyline(coordinates, {
+          color: cable.color,
+          dashArray: cable.dashArray,
+          interactive: false,
+          opacity: cable.opacity,
+          smoothFactor: 0.5,
+          weight: cable.weight,
+        }).addTo(cableLayer);
+        window.L.polyline(coordinates, {
+          bubblingMouseEvents: false,
+          cableId: cable.id,
+          color: "transparent",
+          interactive: true,
+          opacity: 0.01,
+          smoothFactor: 0.5,
+          weight: Math.max(12, cable.weight + 8),
+        })
           .bindTooltip(cableLabel(cable), { className: "map-tooltip", sticky: true })
+          .on("click", () => toggleCable(cable))
           .addTo(cableLayer);
       });
     });
@@ -461,12 +584,14 @@ function flashRouteEdges(edgeIds) {
 
 async function toggleNode(nodeId) {
   const node = currentGraph.nos.find((candidate) => candidate.id === nodeId);
-  if (!node) {
+  const operationId = `node:${nodeId}`;
+  if (!node || pendingTopologyChanges.has(operationId)) {
     return;
   }
   const action = node.ativo ? "derrubar" : "restaurar";
 
   try {
+    pendingTopologyChanges.add(operationId);
     clearActionError();
     const response = await fetch(`/nos/${encodeURIComponent(nodeId)}/${action}`, {
       method: "POST",
@@ -474,13 +599,47 @@ async function toggleNode(nodeId) {
     if (!response.ok) {
       throw new Error(`A API respondeu com HTTP ${response.status}.`);
     }
-    clearMinimumCut();
-    currentGraph = await fetchGraph();
-    currentCriticidade = await fetchCriticidade();
-    await recalculateAndRender();
+    await refreshAfterTopologyChange();
   } catch (error) {
     showActionError(error);
+  } finally {
+    pendingTopologyChanges.delete(operationId);
   }
+}
+
+async function toggleCable(cable) {
+  const currentCable = currentGraph.arestas.find(
+    (candidate) => edgeKey(candidate.origem, candidate.destino) === cable.id,
+  );
+  const operationId = `edge:${cable.id}`;
+  if (!currentCable || pendingTopologyChanges.has(operationId)) {
+    return;
+  }
+  const action = currentCable.ativo ? "derrubar" : "restaurar";
+
+  try {
+    pendingTopologyChanges.add(operationId);
+    clearActionError();
+    const response = await fetch(`/arestas/${action}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ origem: currentCable.origem, destino: currentCable.destino }),
+    });
+    if (!response.ok) {
+      throw new Error(`A API respondeu com HTTP ${response.status}.`);
+    }
+    await refreshAfterTopologyChange();
+  } catch (error) {
+    showActionError(error);
+  } finally {
+    pendingTopologyChanges.delete(operationId);
+  }
+}
+
+async function refreshAfterTopologyChange() {
+  clearMinimumCut();
+  [currentGraph, currentCriticidade] = await Promise.all([fetchGraph(), fetchCriticidade()]);
+  await recalculateAndRender();
 }
 
 async function fetchAlternateRoutes(origem, destino) {
@@ -533,7 +692,10 @@ async function refreshRoute() {
 }
 
 async function recalculateAndRender() {
-  const previousRouteEdges = await refreshRoute();
+  const comparisonUpdate = refreshComparison().catch((error) => {
+    showActionError(error);
+  });
+  const [previousRouteEdges] = await Promise.all([refreshRoute(), comparisonUpdate]);
   await loadTrace();
   updateMap(currentGraph);
   renderRouteSummary(currentGraph);
@@ -769,6 +931,7 @@ function bindControls() {
   });
 
   elements.minCutButton.addEventListener("click", calculateMinimumCut);
+  elements.comparisonToggle.addEventListener("click", toggleComparison);
   elements.resetButton.addEventListener("click", resetSimulation);
   elements.tracePlayButton.addEventListener("click", toggleTracePlayback);
   elements.traceStepButton.addEventListener("click", applyTraceStep);
@@ -797,6 +960,7 @@ function showGraph(graph) {
   updateMinCutButton();
   bindControls();
   renderRouteSummary(graph);
+  renderComparison();
   renderCriticalitySummary();
   elements.nodeCount.textContent = graph.nos.length;
   elements.edgeCount.textContent = graph.arestas.length;
